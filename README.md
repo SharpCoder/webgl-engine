@@ -11,7 +11,7 @@ Hmm, maybe copy the code and include it? This isn't published anywhere yet.
 ## Usage
 
 ```
-import { Engine, Scene, cuboid, rads } from 'webgl-engine';
+import { Engine, Scene, cuboid, rads, Repeat, Vec3 } from 'webgl-engine';
 
 // In your project, something like this
 let engine = new Engine();
@@ -29,8 +29,6 @@ for (let i = 0; i < 300; i++) {
         Math.random() * RANGE - Math.random() * RANGE,
         Math.random() * RANGE - Math.random() * RANGE,
     ];
-
-    all_positions.push(positions);
 
     const scale = Math.random() * 50 + 10;
     DemoScene.addObject({
