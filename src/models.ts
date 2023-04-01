@@ -1,3 +1,5 @@
+import type { Engine } from './engine';
+
 export type Vec2D = [number, number];
 export type Vec2DArray = Vec2D[] | Vec2D[][];
 
@@ -21,18 +23,24 @@ export type ProgramTemplate = {
     attributes: Record<
         string,
         {
-            buffer: WebGLBuffer;
+            buffer?: WebGLBuffer;
             components: number;
             normalized: boolean;
             type: number;
-            generateData: () => BufferSource;
+            generateData: (engine: Engine) => BufferSource;
         }
     >;
-    constantUniforms?: Record<string, (loc: WebGLUniformLocation) => void>;
-    staticUniforms?: Record<string, (loc: WebGLUniformLocation) => void>;
+    constantUniforms?: Record<
+        string,
+        (engine: Engine, loc: WebGLUniformLocation) => void
+    >;
+    staticUniforms?: Record<
+        string,
+        (engine: Engine, loc: WebGLUniformLocation) => void
+    >;
     dynamicUniforms?: Record<
         string,
-        (loc: WebGLUniformLocation, obj: Obj3d) => void
+        (engine: Engine, loc: WebGLUniformLocation, obj: Obj3d) => void
     >;
 };
 
@@ -45,6 +53,7 @@ export type Obj3d = {
     rotation: number[];
     offsets: number[];
     vertexes: number[];
+    normals?: number[];
     allowClipping?: boolean;
     texture?: texture;
     colors?: number[];
@@ -53,7 +62,7 @@ export type Obj3d = {
     properties?: Record<any, any>;
     _bbox?: bbox;
     _computed?: {
-        positionMatrix: [];
+        positionMatrix: number[];
     };
     update?: (time_t: number) => void;
 } & Record<any, any>;

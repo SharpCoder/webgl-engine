@@ -1,22 +1,8 @@
 import { createProgram, createShader } from './helpers';
 import { Loader } from './loader';
 import { isPowerOf2, m4 } from './math';
-import {
-    Flatten2D,
-    Repeat2D,
-    type CompiledProgram,
-    type ProgramTemplate,
-    type repeat_mode,
-} from './models';
+import type { CompiledProgram, ProgramTemplate, repeat_mode } from './models';
 import type { Scene } from './scene';
-import {
-    default3DFragmentShader,
-    default3DVertexShader,
-    defaultSkyboxFragmentShader,
-    defaultSkyboxVertexShader,
-    fogFragmentShader,
-    fogVertexShader,
-} from './shaders';
 import { rads } from './utils';
 
 export type ReadyState = 'initialize' | 'loading' | 'ready' | 'destroyed';
@@ -43,13 +29,13 @@ export class Engine {
     readyState: ReadyState;
     onReadyChange?: (ready: ReadyState) => void;
     _debugLogs: string;
+    loader: Loader;
 
     /** Values that are computed by the engine. */
     computed: EngineComputedValues;
 
     private _locations: Record<string, WebGLUniformLocation>;
     private _buffers: Record<string, WebGLBuffer>;
-    private _loader: Loader;
     private _canvasId: number;
     private programs: Record<string, CompiledProgram>;
 
@@ -65,12 +51,15 @@ export class Engine {
     private mousemoveListener: any;
     private mousedownListener: any;
 
+    private bufferedMethodCalls: any[];
+
     constructor() {
         this.id = new Date().getTime() * Math.random();
         this.lastTime = new Date().getTime();
         this.scenes = [];
         this.keymap = {};
         this.programs = {};
+        this.bufferedMethodCalls = [];
         this.computed = {
             cameraMatrix: [],
             projectionMatrix: [],
@@ -88,7 +77,7 @@ export class Engine {
         this._locations = {};
         this._buffers = {};
         this._debugLogs = '';
-        this._loader = new Loader();
+        this.loader = new Loader();
         this.readyState = 'initialize';
 
         // Configure the event listeners
@@ -105,305 +94,8 @@ export class Engine {
     }
 
     initialize(canvas: HTMLCanvasElement) {
-        this.setReady('loading');
+        this.setReady('initialize');
         this.setCanvas(canvas);
-
-        const { gl } = this;
-
-        this.attachProgram({
-            name: 'skybox',
-            order: 999,
-            sceneDrawArgs: {
-                mode: gl.TRIANGLES,
-                count: 6,
-                depthFunc: gl.LEQUAL,
-            },
-            vertexShader: defaultSkyboxVertexShader,
-            fragmentShader: defaultSkyboxFragmentShader,
-            attributes: {
-                a_position: {
-                    buffer: gl.createBuffer(),
-                    components: 2,
-                    type: gl.FLOAT,
-                    normalized: false,
-                    generateData: () => {
-                        return new Float32Array([
-                            -1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1,
-                        ]);
-                    },
-                },
-            },
-            constantUniforms: {
-                u_skybox: (loc) => {
-                    const texture = gl.createTexture();
-                    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
-
-                    const targets = [
-                        {
-                            uri: 'textures/skybox/Daylight Box_Left.bmp',
-                            target: gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
-                        },
-                        {
-                            uri: 'textures/skybox/Daylight Box_Bottom.bmp',
-                            target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
-                        },
-                        {
-                            uri: 'textures/skybox/Daylight Box_Back.bmp',
-                            target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
-                        },
-                        {
-                            uri: 'textures/skybox/Daylight Box_Right.bmp',
-                            target: gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-                        },
-                        {
-                            uri: 'textures/skybox/Daylight Box_Top.bmp',
-                            target: gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
-                        },
-                        {
-                            uri: 'textures/skybox/Daylight Box_Front.bmp',
-                            target: gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
-                        },
-                    ];
-
-                    const level = 0;
-                    const internalFormat = gl.RGBA;
-                    const width = 512;
-                    const height = 512;
-                    const format = gl.RGBA;
-                    const type = gl.UNSIGNED_BYTE;
-
-                    const loaderMap = {};
-                    const promises = [];
-                    for (const { uri, target } of targets) {
-                        if (!loaderMap[uri]) {
-                            loaderMap[uri] = true;
-                            promises.push(this._loader.load(uri));
-                        }
-
-                        // Setup a default renderer
-                        gl.texImage2D(
-                            target,
-                            level,
-                            internalFormat,
-                            width,
-                            height,
-                            0,
-                            format,
-                            type,
-                            null
-                        );
-                    }
-
-                    Promise.all(promises).then(() => {
-                        for (const { uri, target } of targets) {
-                            const image = this._loader.fetch(uri);
-                            // const texture = gl.createTexture();
-                            gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
-                            gl.texImage2D(
-                                target,
-                                level,
-                                internalFormat,
-                                format,
-                                type,
-                                image
-                            );
-                            gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-                        }
-                    });
-
-                    gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
-
-                    gl.texParameteri(
-                        gl.TEXTURE_CUBE_MAP,
-                        gl.TEXTURE_MIN_FILTER,
-                        gl.LINEAR_MIPMAP_LINEAR
-                    );
-                    gl.uniform1i(loc, 0);
-                },
-            },
-            staticUniforms: {
-                u_fogColor: (loc) => {
-                    gl.uniform4fv(loc, this.settings.fogColor);
-                },
-                u_fogDensity: (loc) => {
-                    gl.uniform1f(loc, this.settings.fogDensity);
-                },
-                u_camera: (loc) => {
-                    // We only care about direciton so remove the translation
-                    const { camera } = this.activeScene;
-                    const viewDirectionMatrix = m4.combine([
-                        m4.translate(
-                            camera.position[0],
-                            camera.position[1],
-                            camera.position[2]
-                        ),
-                        m4.rotateX(-camera.rotation[0]),
-                        m4.rotateY(-camera.rotation[1]),
-                    ]);
-
-                    viewDirectionMatrix[12] = 0;
-                    viewDirectionMatrix[13] = 0;
-                    viewDirectionMatrix[14] = 0;
-
-                    gl.uniformMatrix4fv(
-                        loc,
-                        false,
-                        m4.inverse(
-                            m4.multiply(
-                                this.computed.projectionMatrix,
-                                viewDirectionMatrix
-                            )
-                        )
-                    );
-                },
-            },
-            dynamicUniforms: {
-                u_skybox: (loc) => {
-                    gl.uniform1i(loc, 0);
-                },
-            },
-        });
-
-        this.attachProgram({
-            name: 'fog',
-            order: 1,
-            objectDrawArgs: {
-                depthFunc: gl.LEQUAL,
-                mode: gl.TRIANGLES,
-            },
-            vertexShader: fogVertexShader,
-            fragmentShader: fogFragmentShader,
-            attributes: {
-                a_position: {
-                    buffer: gl.createBuffer(),
-                    components: 3,
-                    type: gl.FLOAT,
-                    normalized: false,
-                    generateData: () => {
-                        return new Float32Array(
-                            this.activeScene.objects.flatMap(
-                                (obj) => obj.vertexes
-                            )
-                        );
-                    },
-                },
-            },
-            staticUniforms: {
-                u_fogColor: (loc) => {
-                    gl.uniform4fv(loc, this.settings.fogColor);
-                },
-                u_fogDensity: (loc) => {
-                    gl.uniform1f(loc, this.settings.fogDensity);
-                },
-                u_projection: (loc) => {
-                    gl.uniformMatrix4fv(
-                        loc,
-                        false,
-                        this.computed.projectionMatrix
-                    );
-                },
-                u_camera: (loc) => {
-                    gl.uniformMatrix4fv(loc, false, this.computed.cameraMatrix);
-                },
-            },
-            dynamicUniforms: {
-                u_worldView: (loc, obj) => {
-                    gl.uniformMatrix4fv(
-                        loc,
-                        false,
-                        obj._computed.positionMatrix
-                    );
-                },
-            },
-        });
-
-        this.attachProgram({
-            name: 'default',
-            order: 0,
-            objectDrawArgs: {
-                depthFunc: gl.LESS,
-                mode: gl.TRIANGLES,
-            },
-            vertexShader: default3DVertexShader,
-            fragmentShader: default3DFragmentShader,
-            attributes: {
-                a_color: {
-                    buffer: gl.createBuffer(),
-                    components: 3,
-                    type: gl.UNSIGNED_BYTE,
-                    normalized: true,
-                    generateData: () => {
-                        return new Uint8Array(
-                            this.activeScene.objects.flatMap(
-                                (obj) => obj.colors ?? []
-                            )
-                        );
-                    },
-                },
-                a_position: {
-                    buffer: gl.createBuffer(),
-                    components: 3,
-                    type: gl.FLOAT,
-                    normalized: false,
-                    generateData: () => {
-                        return new Float32Array(
-                            this.activeScene.objects.flatMap(
-                                (obj) => obj.vertexes
-                            )
-                        );
-                    },
-                },
-                a_texcoord: {
-                    buffer: gl.createBuffer(),
-                    components: 2,
-                    type: gl.FLOAT,
-                    normalized: false,
-                    generateData: () => {
-                        return new Float32Array(
-                            this.activeScene.objects.flatMap(
-                                (obj) =>
-                                    obj.texture?.coordinates ??
-                                    Flatten2D(
-                                        Repeat2D(
-                                            [0, 0],
-                                            (obj.vertexes.length / 3) * 2
-                                        )
-                                    )
-                            )
-                        );
-                    },
-                },
-            },
-            staticUniforms: {
-                u_projection: (loc) => {
-                    gl.uniformMatrix4fv(
-                        loc,
-                        false,
-                        this.computed.projectionMatrix
-                    );
-                },
-                u_camera: (loc) => {
-                    gl.uniformMatrix4fv(loc, false, this.computed.cameraMatrix);
-                },
-            },
-            dynamicUniforms: {
-                u_showtex: (loc, obj) => {
-                    gl.uniform1i(
-                        loc,
-                        obj.texture && obj.texture.enabled !== false ? 1 : 0
-                    );
-                },
-                u_worldView: (loc, obj) => {
-                    gl.uniformMatrix4fv(
-                        loc,
-                        false,
-                        obj._computed.positionMatrix
-                    );
-                },
-            },
-        });
-
-        this._reconfigureBuffers();
     }
 
     attachProgram(template: ProgramTemplate) {
@@ -425,6 +117,7 @@ export class Engine {
         gl.useProgram(program.compiledProgram);
 
         for (const attribute in program.attributes) {
+            program.attributes[attribute].buffer = gl.createBuffer();
             const data = program.attributes[attribute];
             const loc = gl.getAttribLocation(
                 program.compiledProgram,
@@ -440,7 +133,11 @@ export class Engine {
                 0,
                 0
             );
-            gl.bufferData(gl.ARRAY_BUFFER, data.generateData(), gl.STATIC_DRAW);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                data.generateData(this),
+                gl.STATIC_DRAW
+            );
         }
     }
 
@@ -575,13 +272,20 @@ export class Engine {
     setScene(title: string) {
         for (const scene of this.scenes) {
             if (scene.title === title) {
-                this.readyState = 'initialize';
                 this.activeScene = scene;
+                this.setReady('initialize');
                 return;
             }
         }
 
         console.error('Did not find scene ' + title);
+    }
+
+    private configureShaders(shaders: ProgramTemplate[]) {
+        this.programs = {};
+        for (const shader of shaders) {
+            this.attachProgram(shader);
+        }
     }
 
     async _reconfigureBuffers() {
@@ -590,7 +294,7 @@ export class Engine {
         console.log('init reconfigure buffers');
         console.time('reconfigure buffers');
 
-        const { _loader, activeScene, gl } = this;
+        const { loader, activeScene, gl } = this;
         if (!gl) return;
 
         await this.setReady('loading');
@@ -611,17 +315,16 @@ export class Engine {
         // Load each texture, async but blocking.
         const promises = [];
         for (const texture of Object.keys(textureMap)) {
-            promises.push(_loader.load(texture));
+            promises.push(loader.load(texture));
         }
 
         await Promise.all(promises);
         console.timeEnd('load textures');
 
         console.time('bind textures');
-        this.useProgram(this.getProgram('default'));
 
         for (const texture of Object.keys(textureMap)) {
-            const image = _loader.fetch(texture);
+            const image = loader.fetch(texture);
             console.time('load texture into shader');
             const webglTexture = gl.createTexture();
             textureMap[texture] = webglTexture;
@@ -668,7 +371,7 @@ export class Engine {
                 );
                 gl.bufferData(
                     gl.ARRAY_BUFFER,
-                    data.generateData(),
+                    data.generateData(this),
                     gl.STATIC_DRAW
                 );
                 console.timeEnd(`loading attribute ${attribute}`);
@@ -681,7 +384,7 @@ export class Engine {
         console.time('load texture buffer');
         for (const obj of activeScene.objects) {
             if (obj.texture && obj.texture.enabled !== false) {
-                const image = _loader.fetch(obj.texture.uri);
+                const image = loader.fetch(obj.texture.uri);
                 obj.texture._computed = {
                     webglTexture: textureMap[obj.texture.uri],
                     square: isPowerOf2(image.width) && isPowerOf2(image.height),
@@ -699,7 +402,7 @@ export class Engine {
                     program.compiledProgram,
                     uniform
                 );
-                program.constantUniforms[uniform](loc);
+                program.constantUniforms[uniform](this, loc);
             }
         }
 
@@ -720,6 +423,10 @@ export class Engine {
         if (this.readyState === 'destroyed') {
             return;
         } else if (this.readyState === 'initialize') {
+            if (this.activeScene.init) {
+                this.activeScene.init(this);
+            }
+            this.configureShaders(this.activeScene.shaders);
             await this._reconfigureBuffers();
             return;
         } else if (this.readyState === 'loading') {
@@ -754,7 +461,12 @@ export class Engine {
         for (const obj of activeScene.objects) {
             // Calculate the position of all the vertexes for
             // this object.
+            const scaleX = obj.scale?.[0] ?? 1.0;
+            const scaleY = obj.scale?.[1] ?? 1.0;
+            const scaleZ = obj.scale?.[2] ?? 1.0;
+
             let positionMatrixes = [
+                m4.scale(scaleX, scaleY, scaleZ),
                 m4.translate(obj.position[0], obj.position[1], obj.position[2]),
                 m4.rotateX(obj.rotation[0]),
                 m4.rotateY(obj.rotation[1]),
@@ -785,9 +497,9 @@ export class Engine {
                 }
             }
 
-            const width = max[0] - min[0];
-            const height = max[1] - min[1];
-            const depth = max[2] - min[2];
+            const width = (max[0] - min[0]) * scaleX;
+            const height = (max[1] - min[1]) * scaleY;
+            const depth = (max[2] - min[2]) * scaleZ;
 
             // Calculate the bounding box of the shape
             // based on the rotations being applied.
@@ -800,6 +512,7 @@ export class Engine {
                     height + obj.offsets[1],
                     depth + obj.offsets[2]
                 ),
+                m4.scale(scaleX, scaleY, scaleZ),
             ];
 
             const bboxMatrix = m4.combine(bboxMatrixes);
@@ -833,7 +546,7 @@ export class Engine {
                     program.compiledProgram,
                     uniform
                 );
-                program.staticUniforms[uniform](loc);
+                program.staticUniforms[uniform](this, loc);
             }
 
             let offset = 0;
@@ -844,7 +557,7 @@ export class Engine {
                         program.compiledProgram,
                         uniform
                     );
-                    program.dynamicUniforms[uniform](loc, obj);
+                    program.dynamicUniforms[uniform](this, loc, obj);
                 }
 
                 if (obj.visible === false) {

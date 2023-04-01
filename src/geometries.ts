@@ -51,3 +51,55 @@ export function cuboid(w: number, h: number, d: number) {
         Vec3(w, 0, 0),
     ]);
 }
+
+export function cuboidNormals() {
+    return Flatten([
+        // Front
+        Vec3(0, 0, 1),
+        Vec3(0, 0, 1),
+        Vec3(0, 0, 1),
+        Vec3(0, 0, 1),
+        Vec3(0, 0, 1),
+        Vec3(0, 0, 1),
+
+        // Left
+        Vec3(-1, 0, 0),
+        Vec3(-1, 0, 0),
+        Vec3(-1, 0, 0),
+        Vec3(-1, 0, 0),
+        Vec3(-1, 0, 0),
+        Vec3(-1, 0, 0),
+
+        // Back
+        Vec3(0, 0, -1),
+        Vec3(0, 0, -1),
+        Vec3(0, 0, -1),
+        Vec3(0, 0, -1),
+        Vec3(0, 0, -1),
+        Vec3(0, 0, -1),
+
+        // Right
+        Vec3(1, 0, 0),
+        Vec3(1, 0, 0),
+        Vec3(1, 0, 0),
+        Vec3(1, 0, 0),
+        Vec3(1, 0, 0),
+        Vec3(1, 0, 0),
+
+        // Top
+        Vec3(0, 1, 0),
+        Vec3(0, 1, 0),
+        Vec3(0, 1, 0),
+        Vec3(0, 1, 0),
+        Vec3(0, 1, 0),
+        Vec3(0, 1, 0),
+
+        // Bottom
+        Vec3(0, -1, 0),
+        Vec3(0, -1, 0),
+        Vec3(0, -1, 0),
+        Vec3(0, -1, 0),
+        Vec3(0, -1, 0),
+        Vec3(0, -1, 0),
+    ]);
+}
