@@ -9,6 +9,7 @@ export type ReadyState = 'initialize' | 'loading' | 'ready' | 'destroyed';
 export type EventType = 'keydown' | 'click' | 'mousemove';
 export type EngineComputedValues = {
     cameraMatrix: number[];
+    inverseCameraMatrix: number[];
     projectionMatrix: number[];
 } & Record<string, any>;
 
@@ -51,17 +52,15 @@ export class Engine {
     private mousemoveListener: any;
     private mousedownListener: any;
 
-    private bufferedMethodCalls: any[];
-
     constructor() {
         this.id = new Date().getTime() * Math.random();
         this.lastTime = new Date().getTime();
         this.scenes = [];
         this.keymap = {};
         this.programs = {};
-        this.bufferedMethodCalls = [];
         this.computed = {
             cameraMatrix: [],
+            inverseCameraMatrix: [],
             projectionMatrix: [],
         };
         this.settings = {
@@ -444,7 +443,7 @@ export class Engine {
         };
 
         // Calculate the camera matrixes
-        let offset = 0;
+        const { camera } = this.activeScene;
 
         // Compute the main values
         this.computed.projectionMatrix = m4.perspective(
@@ -454,8 +453,9 @@ export class Engine {
             this.settings.zFar
         );
 
-        this.computed.cameraMatrix = m4.inverse(
-            this.activeScene.camera.getMatrix()
+        this.computed.cameraMatrix = camera.getMatrix();
+        this.computed.inverseCameraMatrix = m4.inverse(
+            this.computed.cameraMatrix
         );
 
         for (const obj of activeScene.objects) {

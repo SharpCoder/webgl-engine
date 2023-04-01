@@ -97,7 +97,11 @@ export const DefaultShader: ProgramTemplate = {
         },
         u_camera: (engine, loc) => {
             const { gl } = engine;
-            gl.uniformMatrix4fv(loc, false, engine.computed.cameraMatrix);
+            gl.uniformMatrix4fv(
+                loc,
+                false,
+                engine.computed.inverseCameraMatrix
+            );
         },
     },
     dynamicUniforms: {

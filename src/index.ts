@@ -11,6 +11,5 @@ export * from './scene';
 // Shaders
 export * from './shaders/default';
 export * from './shaders/fog';
-export * from './shaders/lighting';
 export * from './shaders/skybox';
 export * from './utils';
