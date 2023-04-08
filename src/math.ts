@@ -53,6 +53,18 @@ export class m3 {
         }
         return result;
     }
+
+    static dot(a: number[], b: number[]): number {
+        return a.map((_x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+    }
+
+    static cross(a: number[], b: number[]): number[] {
+        return [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
+        ];
+    }
 }
 
 export class m4 {
@@ -378,6 +390,10 @@ export class m4 {
                     tmp_21 * m12 -
                     (tmp_20 * m12 + tmp_23 * m22 + tmp_17 * m02)),
         ];
+    }
+
+    static identity(): number[] {
+        return [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
     }
 
     static combine(matrixes: number[][]): number[] {

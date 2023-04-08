@@ -103,3 +103,42 @@ export function cuboidNormals() {
         Vec3(0, -1, 0),
     ]);
 }
+
+export function cylinder(sides, length, dia) {
+    const result = [];
+    const vertices = [];
+    const inc = (Math.PI * 2.0) / sides;
+
+    for (let i = 0, angle = 0; i < sides; i++, angle += inc) {
+        const x = (dia / 2) * Math.cos(angle);
+        const z = (dia / 2) * Math.sin(angle);
+        // vertices[i] = Vec3(length / 2, x, z);
+        // vertices[i + sides] = Vec3(-length / 2, x, z);
+
+        vertices[i] = Vec3(x, 0, z);
+        vertices[i + sides] = Vec3(x, length, z);
+    }
+
+    for (let i = 0; i < sides - 1; i++) {
+        const a = i + 1,
+            b = i,
+            c = sides + i,
+            d = sides + i + 1;
+
+        result.push(vertices[a]);
+        result.push(vertices[b]);
+        result.push(vertices[c]);
+        result.push(vertices[a]);
+        result.push(vertices[c]);
+        result.push(vertices[d]);
+    }
+
+    result.push(vertices[0]);
+    result.push(vertices[sides - 1]);
+    result.push(vertices[2 * sides - 1]);
+    result.push(vertices[0]);
+    result.push(vertices[2 * sides - 1]);
+    result.push(vertices[sides]);
+
+    return Flatten(result);
+}

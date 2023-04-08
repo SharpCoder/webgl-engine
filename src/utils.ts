@@ -5,3 +5,7 @@ export function rads(degs) {
 export function degs(rads) {
     return (rads * 180) / Math.PI;
 }
+
+export function zeros(): number[] {
+    return [0, 0, 0];
+}

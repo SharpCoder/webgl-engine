@@ -54,6 +54,7 @@ export type Obj3d = {
     offsets: number[];
     vertexes: number[];
     normals?: number[];
+    texcoords?: number[];
     allowClipping?: boolean;
     texture?: texture;
     colors?: number[];
@@ -80,7 +81,6 @@ export type repeat_mode = 'repeat' | 'clamp_to_edge' | 'mirrored_repeat';
 
 export type texture = {
     uri: string;
-    coordinates: number[];
     repeat_horizontal: repeat_mode;
     repeat_vertical: repeat_mode;
     enabled?: boolean;
@@ -103,10 +103,12 @@ export function Repeat(arr: Vec3D, qty: number): Vec3D[] {
 }
 
 export function Flatten(arr: Vec3DArray): number[] {
-    if (Array.isArray(arr[0][0])) {
-        return (arr as Vec3D[][]).flatMap((num) => num).flatMap((num) => num);
+    const data = [...arr];
+
+    if (Array.isArray(data[0][0])) {
+        return (data as Vec3D[][]).flatMap((num) => num).flatMap((num) => num);
     } else {
-        return (arr as Vec3D[]).flatMap((num) => num);
+        return (data as Vec3D[]).flatMap((num) => num);
     }
 }
 

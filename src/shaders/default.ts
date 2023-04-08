@@ -79,12 +79,17 @@ export const DefaultShader: ProgramTemplate = {
             normalized: false,
             generateData: (engine) => {
                 return new Float32Array(
-                    engine.activeScene.objects.flatMap(
-                        (obj) =>
-                            obj.texture?.coordinates ??
-                            Flatten2D(
-                                Repeat2D([0, 0], (obj.vertexes.length / 3) * 2)
-                            )
+                    engine.activeScene.objects.flatMap((obj) =>
+                        obj.texcoords &&
+                        obj.texture &&
+                        obj.texture.enabled !== false
+                            ? obj.texcoords
+                            : Flatten2D(
+                                  Repeat2D(
+                                      [0, 0],
+                                      (obj.vertexes.length / 3) * 2
+                                  )
+                              )
                     )
                 );
             },
