@@ -1,3 +1,5 @@
+import type { Vec3D } from './models';
+
 export class m3 {
     static translate(x: number, y: number) {
         return [1, 0, 0, 0, 1, 0, x, y, 1];
@@ -407,4 +409,33 @@ export class m4 {
 
 export function isPowerOf2(value) {
     return (value & (value - 1)) == 0;
+}
+
+export function rotationBetweenPoints(a: Vec3D, b: Vec3D) {
+    const angles = [0, 0, 0];
+    const [x1, y1, z1] = a;
+    const [x2, y2, z2] = b;
+    let x = x1 - x2;
+    let y = -(y1 - y2);
+    let z = z1 - z2;
+
+    /// Don't let z be absolutely zero because that fucks with atan2
+    if (z === 0) {
+        z -= 0.0001;
+    }
+
+    angles[0] = Math.atan2(y, z);
+
+    if (z >= 0) {
+        angles[1] = Math.atan2(x * Math.cos(angles[0]), -z);
+    } else {
+        angles[1] = -Math.atan2(x * Math.cos(angles[0]), z);
+    }
+
+    angles[2] = Math.atan2(
+        Math.cos(angles[0]),
+        Math.sin(angles[0]) * Math.sin(angles[1])
+    );
+
+    return angles;
 }

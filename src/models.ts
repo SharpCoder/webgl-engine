@@ -3,7 +3,7 @@ import type { Engine } from './engine';
 export type Vec2D = [number, number];
 export type Vec2DArray = Vec2D[] | Vec2D[][];
 
-export type Vec3D = [number, number, number];
+export type Vec3D = [number, number, number] | number[];
 export type Vec3DArray = Vec3D[] | Vec3D[][];
 
 export type ProgramTemplate = {

@@ -27,6 +27,7 @@ export class Engine {
         fogColor: [number, number, number, number];
         fogDensity: number;
     };
+    properties: Record<any, any>;
     readyState: ReadyState;
     onReadyChange?: (ready: ReadyState) => void;
     _debugLogs: string;
@@ -73,6 +74,7 @@ export class Engine {
 
         this.mousex = window.innerWidth / 2;
         this.mousey = window.innerHeight / 2;
+        this.properties = {};
         this._locations = {};
         this._buffers = {};
         this._debugLogs = '';
@@ -467,7 +469,11 @@ export class Engine {
 
             let positionMatrixes = [
                 m4.scale(scaleX, scaleY, scaleZ),
-                m4.translate(obj.position[0], obj.position[1], obj.position[2]),
+                m4.translate(
+                    obj.position[0],
+                    -obj.position[1],
+                    -obj.position[2]
+                ),
                 m4.rotateX(obj.rotation[0]),
                 m4.rotateY(obj.rotation[1]),
                 m4.rotateZ(obj.rotation[2]),

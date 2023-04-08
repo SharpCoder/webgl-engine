@@ -115,8 +115,8 @@ export function cylinder(sides, length, dia) {
         // vertices[i] = Vec3(length / 2, x, z);
         // vertices[i + sides] = Vec3(-length / 2, x, z);
 
-        vertices[i] = Vec3(x, 0, z);
-        vertices[i + sides] = Vec3(x, length, z);
+        vertices[i] = Vec3(x, z, 0);
+        vertices[i + sides] = Vec3(x, z, length);
     }
 
     for (let i = 0; i < sides - 1; i++) {
