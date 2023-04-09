@@ -54,8 +54,10 @@ export type Obj3d = {
     offsets: number[];
     vertexes: number[];
     normals?: number[];
-    texcoords?: number[];
     allowClipping?: boolean;
+    children?: Obj3d[];
+    _parent?: Obj3d;
+    texcoords?: number[];
     texture?: texture;
     colors?: number[];
     visible?: boolean;
@@ -66,6 +68,7 @@ export type Obj3d = {
         positionMatrix: number[];
     };
     update?: (time_t: number, engine: Engine) => void;
+    beforeDraw?: (engine: Engine) => void;
 } & Record<any, any>;
 
 export type bbox = {
@@ -121,7 +124,7 @@ export function Repeat2D(arr: Vec2DArray | Vec2D, qty: number): Vec2D[] {
 }
 
 export function Flatten2D(arr: Vec2DArray): number[] {
-    if (Array.isArray(arr[0][0])) {
+    if (Array.isArray(arr[0]?.[0])) {
         return (arr as Vec2D[][]).flatMap((num) => num).flatMap((num) => num);
     } else {
         return (arr as Vec2D[]).flatMap((num) => num);

@@ -41,7 +41,22 @@ export class Scene {
     }
 
     addObject(obj: Obj3d) {
-        this.objects.push(obj);
+        const queue = [obj];
+        // Collect all root and child nodes.
+        while (queue.length > 0) {
+            const obj = queue.pop();
+            if (obj) {
+                this.objects.push(obj);
+                if (obj.children) {
+                    for (const child of obj.children) {
+                        child._parent = obj;
+                        queue.push(child);
+                    }
+                }
+            } else {
+                break;
+            }
+        }
     }
 
     setVisibility(visible: boolean) {

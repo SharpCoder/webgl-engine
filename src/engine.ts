@@ -1,7 +1,13 @@
 import { createProgram, createShader } from './helpers';
 import { Loader } from './loader';
 import { isPowerOf2, m4 } from './math';
-import type { CompiledProgram, ProgramTemplate, repeat_mode } from './models';
+import type {
+    bbox,
+    CompiledProgram,
+    Obj3d,
+    ProgramTemplate,
+    repeat_mode,
+} from './models';
 import type { Scene } from './scene';
 import { rads } from './utils';
 
@@ -468,86 +474,45 @@ export class Engine {
         this.computed.inverseCameraMatrix = m4.inverse(
             this.computed.cameraMatrix
         );
-
-        for (const obj of activeScene.objects) {
-            // Calculate the position of all the vertexes for
-            // this object.
-            const scaleX = obj.scale?.[0] ?? 1.0;
-            const scaleY = obj.scale?.[1] ?? 1.0;
-            const scaleZ = obj.scale?.[2] ?? 1.0;
-
-            let positionMatrixes = [
-                m4.scale(scaleX, scaleY, scaleZ),
-                m4.translate(
-                    obj.position[0],
-                    -obj.position[1],
-                    -obj.position[2]
-                ),
-                m4.rotateX(obj.rotation[0]),
-                m4.rotateY(obj.rotation[1]),
-                m4.rotateZ(obj.rotation[2]),
-                m4.translate(obj.offsets[0], obj.offsets[1], obj.offsets[2]),
-            ];
-
-            const positionMatrix = m4.combine(positionMatrixes);
-
-            // Calculate the dimensions
-            const min = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE];
-            const max = [
-                -Number.MAX_VALUE,
-                -Number.MAX_VALUE,
-                -Number.MAX_VALUE,
-            ];
-
-            // Calculate the bounding box based on the vertexes
-            for (let r = 0; r < obj.vertexes.length / 3; r += 1) {
-                for (let i = 0; i < 3; i++) {
-                    const axis = obj.vertexes[r * 3 + i];
-                    if (min[i] > axis) {
-                        min[i] = axis;
-                    }
-                    if (max[i] < axis) {
-                        max[i] = axis;
-                    }
-                }
+        // Collect all the objects
+        const drawables = activeScene.objects;
+        for (const drawable of drawables) {
+            if (drawable._parent) {
+                // console.log(drawable);
             }
+        }
+        // const queue = activeScene.objects;
+        // Collect all root and child nodes.
+        // while (queue.length > 0) {
+        //     const obj = queue.pop();
+        //     if (obj) {
+        //         drawables.push(obj);
+        //         if (obj.children) {
+        //             for (const child of obj.children) {
+        //                 child._parent = obj;
+        //                 queue.push(child);
+        //             }
+        //         }
+        //     } else {
+        //         break;
+        //     }
+        // }
 
-            const width = (max[0] - min[0]) * scaleX;
-            const height = (max[1] - min[1]) * scaleY;
-            const depth = (max[2] - min[2]) * scaleZ;
-
-            // Calculate the bounding box of the shape
-            // based on the rotations being applied.
-            let bboxMatrixes = [
-                m4.rotateZ(obj.rotation[2]),
-                m4.rotateY(obj.rotation[1]),
-                m4.rotateX(obj.rotation[0]),
-                m4.translate(
-                    width + obj.offsets[0],
-                    height + obj.offsets[1],
-                    depth + obj.offsets[2]
-                ),
-                m4.scale(scaleX, scaleY, scaleZ),
-            ];
-
-            const bboxMatrix = m4.combine(bboxMatrixes);
-
-            // Generate the bounding box property
-            // with the absolute final position and
-            // dimensions relative to orientation in
-            // 3d space.
-            obj._bbox = {
-                x: positionMatrix[12],
-                y: positionMatrix[13],
-                z: positionMatrix[14],
-                w: bboxMatrix[12],
-                h: bboxMatrix[13],
-                d: bboxMatrix[14],
-            };
-
+        for (const obj of drawables) {
             obj._computed = {
-                positionMatrix,
+                positionMatrix: computePositionMatrix(obj),
             };
+
+            // If it has a parent, merge the position matrixes.
+            // This should always work, in theory, because of how the queue
+            // is constructed (hierarchically).
+            if (obj._parent) {
+                obj._computed.positionMatrix = m4.combine([
+                    obj._parent._computed.positionMatrix,
+                    obj._computed.positionMatrix,
+                ]);
+            }
+            obj._bbox = computeBbox(obj);
         }
 
         const programs = Object.values(this.programs);
@@ -566,7 +531,7 @@ export class Engine {
 
             let offset = 0;
             gl.depthFunc(program.objectDrawArgs?.depthFunc ?? gl.LESS);
-            for (const obj of activeScene.objects) {
+            for (const obj of drawables) {
                 for (const uniform in program.dynamicUniforms ?? {}) {
                     const loc = gl.getUniformLocation(
                         program.compiledProgram,
@@ -649,4 +614,80 @@ export class Engine {
             obj.update && obj.update(time_t, this);
         }
     }
+}
+
+function computePositionMatrix(obj: Obj3d): number[] {
+    // Calculate the position of all the vertexes for
+    // this object.
+    const scaleX = obj.scale?.[0] ?? 1.0;
+    const scaleY = obj.scale?.[1] ?? 1.0;
+    const scaleZ = obj.scale?.[2] ?? 1.0;
+
+    let positionMatrixes = [
+        m4.scale(scaleX, scaleY, scaleZ),
+        m4.translate(obj.position[0], -obj.position[1], -obj.position[2]),
+        m4.rotateX(obj.rotation[0]),
+        m4.rotateY(obj.rotation[1]),
+        m4.rotateZ(obj.rotation[2]),
+        m4.translate(obj.offsets[0], obj.offsets[1], obj.offsets[2]),
+    ];
+
+    return m4.combine(positionMatrixes);
+}
+
+function computeBbox(obj: Obj3d): bbox {
+    const positionMatrix = obj._computed?.positionMatrix ?? [];
+    const scaleX = obj.scale?.[0] ?? 1.0;
+    const scaleY = obj.scale?.[1] ?? 1.0;
+    const scaleZ = obj.scale?.[2] ?? 1.0;
+
+    // Calculate the dimensions
+    const min = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE];
+    const max = [-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE];
+
+    // Calculate the bounding box based on the vertexes
+    for (let r = 0; r < obj.vertexes.length / 3; r += 1) {
+        for (let i = 0; i < 3; i++) {
+            const axis = obj.vertexes[r * 3 + i];
+            if (min[i] > axis) {
+                min[i] = axis;
+            }
+            if (max[i] < axis) {
+                max[i] = axis;
+            }
+        }
+    }
+
+    const width = (max[0] - min[0]) * scaleX;
+    const height = (max[1] - min[1]) * scaleY;
+    const depth = (max[2] - min[2]) * scaleZ;
+
+    // Calculate the bounding box of the shape
+    // based on the rotations being applied.
+    let bboxMatrixes = [
+        m4.rotateZ(obj.rotation[2]),
+        m4.rotateY(obj.rotation[1]),
+        m4.rotateX(obj.rotation[0]),
+        m4.translate(
+            width + obj.offsets[0],
+            height + obj.offsets[1],
+            depth + obj.offsets[2]
+        ),
+        m4.scale(scaleX, scaleY, scaleZ),
+    ];
+
+    const bboxMatrix = m4.combine(bboxMatrixes);
+
+    // Generate the bounding box property
+    // with the absolute final position and
+    // dimensions relative to orientation in
+    // 3d space.
+    return {
+        x: positionMatrix[12],
+        y: positionMatrix[13],
+        z: positionMatrix[14],
+        w: bboxMatrix[12],
+        h: bboxMatrix[13],
+        d: bboxMatrix[14],
+    };
 }

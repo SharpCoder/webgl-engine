@@ -52,7 +52,6 @@ export class Camera {
     rotateY(yRads: number) {
         this.rotation[1] = yRads;
     }
-    mag;
 
     rotateZ(zRads: number) {
         this.rotation[2] = zRads;

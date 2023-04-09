@@ -112,8 +112,6 @@ export function cylinder(sides, length, dia) {
     for (let i = 0, angle = 0; i < sides; i++, angle += inc) {
         const x = (dia / 2) * Math.cos(angle);
         const z = (dia / 2) * Math.sin(angle);
-        // vertices[i] = Vec3(length / 2, x, z);
-        // vertices[i + sides] = Vec3(-length / 2, x, z);
 
         vertices[i] = Vec3(x, z, 0);
         vertices[i + sides] = Vec3(x, z, length);
