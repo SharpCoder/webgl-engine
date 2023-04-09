@@ -4,6 +4,7 @@ import type { Vec3D } from './models';
 export class Camera {
     position: Vec3D;
     rotation: Vec3D;
+    offset: Vec3D;
     target?: Vec3D;
     colliding: boolean;
 
@@ -15,6 +16,7 @@ export class Camera {
         rotation?: Vec3D;
     }) {
         this.colliding = false;
+        this.offset = [0, 0, 0];
         this.position = position ?? [0, 0, 0];
         this.rotation = rotation ?? [0, 0, 0];
     }
@@ -50,6 +52,7 @@ export class Camera {
     rotateY(yRads: number) {
         this.rotation[1] = yRads;
     }
+    mag;
 
     rotateZ(zRads: number) {
         this.rotation[2] = zRads;
@@ -61,6 +64,7 @@ export class Camera {
             m4.rotateZ(this.rotation[2]),
             m4.rotateY(this.rotation[1]),
             m4.rotateX(this.rotation[0]),
+            m4.translate.apply(this, this.offset),
         ];
 
         const matrix = m4.combine(matrixes);

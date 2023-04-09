@@ -43,6 +43,7 @@ export class Engine {
 
     // Input processes
     keymap: Record<string, boolean>;
+    mousebutton: number;
     mousex: number;
     mousey: number;
 
@@ -52,6 +53,7 @@ export class Engine {
     private keyupListener: any;
     private mousemoveListener: any;
     private mousedownListener: any;
+    private mouseupListener: any;
 
     constructor() {
         this.id = new Date().getTime() * Math.random();
@@ -72,6 +74,7 @@ export class Engine {
             fogDensity: 0.088,
         };
 
+        this.mousebutton = -1;
         this.mousex = window.innerWidth / 2;
         this.mousey = window.innerHeight / 2;
         this.properties = {};
@@ -87,11 +90,14 @@ export class Engine {
         this.keyupListener = this._handleKeyup.bind(this);
         this.mousemoveListener = this._handleMouseMove.bind(this);
         this.mousedownListener = this._handleMouseDown.bind(this);
+        this.mouseupListener = this._handleMouseUp.bind(this);
+
         document.addEventListener('keydown', this.keydownListener);
         document.addEventListener('keypress', this.keypressListener);
         document.addEventListener('keyup', this.keyupListener);
         document.addEventListener('mousemove', this.mousemoveListener);
         document.addEventListener('mousedown', this.mousedownListener);
+        document.addEventListener('mouseup', this.mouseupListener);
     }
 
     initialize(canvas: HTMLCanvasElement) {
@@ -244,6 +250,7 @@ export class Engine {
     _handleMouseMove(evt: MouseEvent) {
         this.mousex = evt.clientX;
         this.mousey = evt.clientY;
+        this.mousebutton = evt.buttons;
     }
 
     _handleMouseDown(evt: MouseEvent) {
@@ -257,6 +264,8 @@ export class Engine {
             this.keymap = {};
         }
     }
+
+    _handleMouseUp(evt: MouseEvent) {}
 
     debug(str: string) {
         this._debugLogs += str;
@@ -637,7 +646,7 @@ export class Engine {
 
         activeScene.update(time_t, this);
         for (const obj of activeScene.objects) {
-            obj.update && obj.update(time_t);
+            obj.update && obj.update(time_t, this);
         }
     }
 }

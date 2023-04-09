@@ -65,7 +65,7 @@ export type Obj3d = {
     _computed?: {
         positionMatrix: number[];
     };
-    update?: (time_t: number) => void;
+    update?: (time_t: number, engine: Engine) => void;
 } & Record<any, any>;
 
 export type bbox = {
