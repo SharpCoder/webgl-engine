@@ -59,6 +59,25 @@ export class Scene {
         }
     }
 
+    removeObject(obj: Obj3d) {
+        const queue = [obj];
+        // Collect all root and child nodes.
+        while (queue.length > 0) {
+            const obj = queue.pop();
+            if (obj) {
+                this.objects.splice(this.objects.indexOf(obj), 1);
+                if (obj.children) {
+                    for (const child of obj.children) {
+                        child._parent = obj;
+                        queue.push(child);
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
     setVisibility(visible: boolean) {
         this.visible = visible;
     }
