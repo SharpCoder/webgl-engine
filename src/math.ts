@@ -407,6 +407,12 @@ export class m4 {
     }
 }
 
+export function norm(arr: number[]) {
+    return Math.sqrt(
+        [...arr].map((p) => Math.pow(p, 2)).reduce((a, b) => a + b)
+    );
+}
+
 export function isPowerOf2(value) {
     return (value & (value - 1)) == 0;
 }
@@ -438,4 +444,29 @@ export function rotationBetweenPoints(a: Vec3D, b: Vec3D) {
     );
 
     return angles;
+}
+
+export function getAnglesFromMatrix(mm: number[]) {
+    let thetaX = 0,
+        thetaY = 0,
+        thetaZ = 0;
+
+    function idx(row, col) {
+        return (col - 1) * 4 + row - 1;
+    }
+
+    thetaX = Math.asin(mm[idx(3, 2)]);
+    if (thetaX < Math.PI / 2) {
+        if (thetaX > -Math.PI / 2) {
+            thetaZ = Math.atan2(-mm[idx(1, 2)], mm[idx(2, 2)]);
+            thetaY = Math.atan2(-mm[idx(3, 1)], mm[idx(3, 3)]);
+        } else {
+            thetaZ = -Math.atan2(-mm[idx(1, 3)], mm[idx(1, 1)]);
+            thetaY = 0;
+        }
+    } else {
+        thetaZ = Math.atan2(mm[idx(1, 3)], mm[idx(1, 1)]);
+        thetaY = 0;
+    }
+    return [thetaX, thetaY, thetaZ];
 }

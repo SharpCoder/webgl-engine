@@ -75,7 +75,7 @@ export class Engine {
         this.settings = {
             fov: 65,
             zNear: 1,
-            zFar: 3000,
+            zFar: 10000,
             fogColor: [0.0, 0.0, 0.0, 1],
             fogDensity: 0.088,
         };
@@ -279,6 +279,7 @@ export class Engine {
     }
 
     addScene(scene: Scene) {
+        scene.engine = this;
         this.scenes.push(scene);
         if (!this.activeScene) {
             this.setScene(scene.title);

@@ -59,7 +59,11 @@ export class Camera {
 
     getMatrix(): number[] {
         const matrixes = [
-            m4.translate(this.position[0], this.position[1], this.position[2]),
+            m4.translate(
+                this.position[0],
+                -this.position[1],
+                -this.position[2]
+            ),
             m4.rotateZ(this.rotation[2]),
             m4.rotateY(this.rotation[1]),
             m4.rotateX(this.rotation[0]),

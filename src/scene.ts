@@ -10,6 +10,7 @@ export class Scene {
     shaders: ProgramTemplate[];
     objects: Obj3d[];
     camera: Camera;
+    engine: Engine;
     init?: (engine: Engine) => void;
     update: (time_t: number, engine: Engine) => void;
     onClick?: () => void;
@@ -64,7 +65,7 @@ export class Scene {
         // Collect all root and child nodes.
         while (queue.length > 0) {
             const obj = queue.pop();
-            if (obj) {
+            if (obj && this.objects.indexOf(obj) >= 0) {
                 this.objects.splice(this.objects.indexOf(obj), 1);
                 if (obj.children) {
                     for (const child of obj.children) {
