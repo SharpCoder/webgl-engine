@@ -75,7 +75,7 @@ export class Engine {
         this.settings = {
             fov: 65,
             zNear: 1,
-            zFar: 10000,
+            zFar: 3000,
             fogColor: [0.0, 0.0, 0.0, 1],
             fogDensity: 0.088,
         };
@@ -477,27 +477,6 @@ export class Engine {
         );
         // Collect all the objects
         const drawables = activeScene.objects;
-        for (const drawable of drawables) {
-            if (drawable._parent) {
-                // console.log(drawable);
-            }
-        }
-        // const queue = activeScene.objects;
-        // Collect all root and child nodes.
-        // while (queue.length > 0) {
-        //     const obj = queue.pop();
-        //     if (obj) {
-        //         drawables.push(obj);
-        //         if (obj.children) {
-        //             for (const child of obj.children) {
-        //                 child._parent = obj;
-        //                 queue.push(child);
-        //             }
-        //         }
-        //     } else {
-        //         break;
-        //     }
-        // }
 
         for (const obj of drawables) {
             obj._computed = {
@@ -532,6 +511,8 @@ export class Engine {
 
             let offset = 0;
             gl.depthFunc(program.objectDrawArgs?.depthFunc ?? gl.LESS);
+            program.beforeDraw && program.beforeDraw.call(this, this);
+
             for (const obj of drawables) {
                 for (const uniform in program.dynamicUniforms ?? {}) {
                     const loc = gl.getUniformLocation(
@@ -594,6 +575,8 @@ export class Engine {
                 gl.depthFunc(depthFunc);
                 gl.drawArrays(mode, 0, count);
             }
+
+            program.afterDraw && program.afterDraw.call(this, this);
         }
 
         return;
@@ -624,13 +607,14 @@ function computePositionMatrix(obj: Obj3d): number[] {
     const scaleY = obj.scale?.[1] ?? 1.0;
     const scaleZ = obj.scale?.[2] ?? 1.0;
 
+    // console.log({ scaleX });
     let positionMatrixes = [
-        m4.scale(scaleX, scaleY, scaleZ),
         m4.translate(obj.position[0], -obj.position[1], -obj.position[2]),
         m4.rotateX(obj.rotation[0]),
         m4.rotateY(obj.rotation[1]),
         m4.rotateZ(obj.rotation[2]),
         m4.translate(obj.offsets[0], obj.offsets[1], obj.offsets[2]),
+        m4.scale(scaleX, scaleY, scaleZ),
     ];
 
     return m4.combine(positionMatrixes);

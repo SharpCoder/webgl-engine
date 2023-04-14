@@ -3,7 +3,9 @@ import type { ParsedModel } from '.';
 function parseNumbers(row: string, skip: number) {
     const result = row.trim().split(' ');
     result.splice(0, skip);
-    return result.map((item) => parseFloat(item));
+    return result
+        .filter((item) => item.length > 0)
+        .map((item) => parseFloat(item));
 }
 
 export function OBJParser(file: string): ParsedModel {
@@ -56,6 +58,7 @@ export function OBJParser(file: string): ParsedModel {
     for (const line of lines) {
         const parts = line
             .trim()
+            .replace(/  /g, ' ')
             .split(' ')
             .map((item) => item.trim());
 

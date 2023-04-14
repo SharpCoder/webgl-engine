@@ -13,6 +13,8 @@ export type ProgramTemplate = {
         depthFunc: number;
         mode: number;
     };
+    beforeDraw?: (engine: Engine) => void;
+    afterDraw?: (engine: Engine) => void;
     sceneDrawArgs?: {
         depthFunc: number;
         mode: number;
@@ -53,6 +55,7 @@ export type Obj3d = {
     rotation: number[];
     offsets: number[];
     vertexes: number[];
+    transparent?: boolean;
     normals?: number[];
     allowClipping?: boolean;
     children?: Obj3d[];

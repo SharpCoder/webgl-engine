@@ -30,12 +30,17 @@ const default3DFragmentShader = `
     // The texture
     uniform sampler2D u_texture;
     uniform bool u_showtex;
+    uniform bool u_transparent;
     
     void main() {
         if (u_showtex) {
             gl_FragColor = texture2D(u_texture, v_texcoord);
         } else {
             gl_FragColor = v_color;
+        }
+
+        if (u_transparent) {
+            gl_FragColor[3] = 0.0;
         }
     }
 `;
@@ -116,6 +121,10 @@ export const DefaultShader: ProgramTemplate = {
                 loc,
                 obj.texture && obj.texture.enabled !== false ? 1 : 0
             );
+        },
+        u_transparent: (engine, loc, obj) => {
+            const { gl } = engine;
+            gl.uniform1i(loc, obj.transparent === true ? 1 : 0);
         },
         u_worldView: (engine, loc, obj) => {
             const { gl } = engine;
