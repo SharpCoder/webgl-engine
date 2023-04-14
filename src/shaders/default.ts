@@ -12,9 +12,15 @@ const default3DVertexShader = `
 
     varying vec4 v_color;
     varying vec2 v_texcoord;
+    uniform bool u_transparent;
 
     void main() {
-        gl_Position = u_projection * u_camera * u_worldView * a_position;
+
+        if (u_transparent) {
+            gl_Position = vec4(0);
+        } else {
+            gl_Position = u_projection * u_camera * u_worldView * a_position;
+        }
 
         v_color = a_color;
         v_texcoord = a_texcoord;
