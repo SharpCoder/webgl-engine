@@ -3,17 +3,18 @@ import type { Engine } from './engine';
 import type { Obj3d, ProgramTemplate } from './models';
 
 export type SceneStatus = 'initializing' | 'ready';
-export class Scene {
+export class Scene<T> {
     title: string;
     visible: boolean;
     status: SceneStatus;
     shaders: ProgramTemplate[];
     objects: Obj3d[];
     camera: Camera;
-    engine: Engine;
-    init?: (engine: Engine) => void;
-    update: (time_t: number, engine: Engine) => void;
-    onClick?: () => void;
+    engine: Engine<T>;
+    init?: (engine: Engine<T>) => void;
+    update: (time_t: number, engine: Engine<T>) => void;
+    onClick?: (engine: Engine<T>) => void;
+    onMouseUp?: (engine: Engine<T>) => void;
 
     constructor({
         title,
@@ -22,11 +23,13 @@ export class Scene {
         shaders,
         status,
         onClick,
+        onMouseUp,
     }: {
         title: string;
-        init?: (engine: Engine) => void;
-        update: (time_t: number, engine: Engine) => void;
-        onClick?: () => void;
+        init?: (engine: Engine<T>) => void;
+        update: (time_t: number, engine: Engine<T>) => void;
+        onClick?: (engine: Engine<T>) => void;
+        onMouseUp?: (engine: Engine<T>) => void;
         status?: SceneStatus;
         shaders: ProgramTemplate[];
     }) {
@@ -35,6 +38,7 @@ export class Scene {
         this.objects = [];
         this.update = update;
         this.onClick = onClick;
+        this.onMouseUp = onMouseUp;
         this.shaders = shaders;
         this.init = init;
         this.status = status;

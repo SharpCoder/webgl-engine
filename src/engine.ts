@@ -19,13 +19,13 @@ export type EngineComputedValues = {
     projectionMatrix: number[];
 } & Record<string, any>;
 
-export class Engine {
+export class Engine<T> {
     canvas: HTMLCanvasElement;
     gl: WebGLRenderingContext;
     id: number;
     lastTime: number;
-    scenes: Scene[];
-    activeScene: Scene;
+    scenes: Scene<T>[];
+    activeScene: Scene<T>;
     settings: {
         fov: number;
         zNear: number;
@@ -33,7 +33,7 @@ export class Engine {
         fogColor: [number, number, number, number];
         fogDensity: number;
     };
-    properties: Record<any, any>;
+    properties: Partial<T>;
     readyState: ReadyState;
     onReadyChange?: (ready: ReadyState) => void;
     _debugLogs: string;
@@ -52,6 +52,8 @@ export class Engine {
     mousebutton: number;
     mousex: number;
     mousey: number;
+    mouseClickDuration: number;
+    private mouseClickStart: number;
 
     // These need to be stored somewhere
     private keydownListener: any;
@@ -81,6 +83,8 @@ export class Engine {
         };
 
         this.mousebutton = -1;
+        this.mouseClickStart = -1;
+        this.mouseClickDuration = 0;
         this.mousex = window.innerWidth / 2;
         this.mousey = window.innerHeight / 2;
         this.properties = {};
@@ -261,7 +265,7 @@ export class Engine {
 
     _handleMouseDown(evt: MouseEvent) {
         if (this.activeScene) {
-            this.activeScene.onClick?.call(this.activeScene);
+            this.activeScene.onClick?.call(this.activeScene, this);
         }
 
         if (evt.button === 2) {
@@ -269,16 +273,26 @@ export class Engine {
             evt.stopPropagation();
             this.keymap = {};
         }
+
+        this.mouseClickStart = new Date().getTime();
+        this.mouseClickDuration = 0;
     }
 
-    _handleMouseUp(evt: MouseEvent) {}
+    _handleMouseUp(evt: MouseEvent) {
+        this.mouseClickDuration = new Date().getTime() - this.mouseClickStart;
+        const { activeScene } = this;
+
+        if (activeScene && activeScene.onMouseUp) {
+            activeScene.onMouseUp(this);
+        }
+    }
 
     debug(str: string) {
         this._debugLogs += str;
         this._debugLogs += '\n';
     }
 
-    addScene(scene: Scene) {
+    addScene(scene: Scene<T>) {
         scene.engine = this;
         this.scenes.push(scene);
         if (!this.activeScene) {

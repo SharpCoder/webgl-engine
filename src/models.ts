@@ -13,8 +13,8 @@ export type ProgramTemplate = {
         depthFunc: number;
         mode: number;
     };
-    beforeDraw?: (engine: Engine) => void;
-    afterDraw?: (engine: Engine) => void;
+    beforeDraw?: (engine: Engine<unknown>) => void;
+    afterDraw?: (engine: Engine<unknown>) => void;
     sceneDrawArgs?: {
         depthFunc: number;
         mode: number;
@@ -29,20 +29,20 @@ export type ProgramTemplate = {
             components: number;
             normalized: boolean;
             type: number;
-            generateData: (engine: Engine) => BufferSource;
+            generateData: (engine: Engine<unknown>) => BufferSource;
         }
     >;
     constantUniforms?: Record<
         string,
-        (engine: Engine, loc: WebGLUniformLocation) => void
+        (engine: Engine<unknown>, loc: WebGLUniformLocation) => void
     >;
     staticUniforms?: Record<
         string,
-        (engine: Engine, loc: WebGLUniformLocation) => void
+        (engine: Engine<unknown>, loc: WebGLUniformLocation) => void
     >;
     dynamicUniforms?: Record<
         string,
-        (engine: Engine, loc: WebGLUniformLocation, obj: Obj3d) => void
+        (engine: Engine<unknown>, loc: WebGLUniformLocation, obj: Obj3d) => void
     >;
 };
 
@@ -70,8 +70,8 @@ export type Obj3d = {
     _computed?: {
         positionMatrix: number[];
     };
-    update?: (time_t: number, engine: Engine) => void;
-    beforeDraw?: (engine: Engine) => void;
+    update?: (time_t: number, engine: Engine<unknown>) => void;
+    beforeDraw?: (engine: Engine<unknown>) => void;
 } & Record<any, any>;
 
 export type bbox = {
