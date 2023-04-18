@@ -33,16 +33,16 @@ export const SkyboxShader: ProgramTemplate = {
     name: 'skybox',
     order: 999,
     sceneDrawArgs: {
-        mode: gl.TRIANGLES,
+        mode: gl?.TRIANGLES,
         count: 6,
-        depthFunc: gl.LEQUAL,
+        depthFunc: gl?.LEQUAL,
     },
     vertexShader: defaultSkyboxVertexShader,
     fragmentShader: defaultSkyboxFragmentShader,
     attributes: {
         a_position: {
             components: 2,
-            type: gl.FLOAT,
+            type: gl?.FLOAT,
             normalized: false,
             generateData: () => {
                 return new Float32Array([

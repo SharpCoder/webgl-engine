@@ -39,15 +39,15 @@ export const FogShader: ProgramTemplate = {
     name: 'fog',
     order: 1,
     objectDrawArgs: {
-        depthFunc: gl.LEQUAL,
-        mode: gl.TRIANGLES,
+        depthFunc: gl?.LEQUAL,
+        mode: gl?.TRIANGLES,
     },
     vertexShader: fogVertexShader,
     fragmentShader: fogFragmentShader,
     attributes: {
         a_position: {
             components: 3,
-            type: gl.FLOAT,
+            type: gl?.FLOAT,
             normalized: false,
             generateData: (engine) => {
                 return new Float32Array(

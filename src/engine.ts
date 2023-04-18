@@ -627,9 +627,16 @@ function computePositionMatrix(obj: Obj3d): number[] {
         m4.rotateX(obj.rotation[0]),
         m4.rotateY(obj.rotation[1]),
         m4.rotateZ(obj.rotation[2]),
-        m4.translate(obj.offsets[0], obj.offsets[1], obj.offsets[2]),
-        m4.scale(scaleX, scaleY, scaleZ),
     ];
+
+    if (obj.additionalMatrix) {
+        positionMatrixes.push([...obj.additionalMatrix]);
+    }
+
+    positionMatrixes.push(
+        m4.translate(obj.offsets[0], obj.offsets[1], obj.offsets[2])
+    );
+    positionMatrixes.push(m4.scale(scaleX, scaleY, scaleZ));
 
     return m4.combine(positionMatrixes);
 }

@@ -470,3 +470,66 @@ export function getAnglesFromMatrix(mm: number[]) {
     }
     return [thetaX, thetaY, thetaZ];
 }
+
+export function getAnglesFromMatrix2(mm: number[]) {
+    let thetaX = 0,
+        thetaY = 0,
+        thetaZ = 0;
+
+    function idx(row, col) {
+        return (col - 1) * 4 + row - 1;
+    }
+
+    const thetaYs = [
+        -Math.asin(mm[idx(3, 1)]),
+        Math.PI + Math.asin(mm[idx(3, 1)]),
+    ];
+
+    const thetaXs = [
+        Math.atan2(
+            mm[idx(3, 2) / Math.cos(thetaYs[0])],
+            mm[idx(3, 3) / Math.cos(thetaYs[0])]
+        ),
+        Math.atan2(
+            mm[idx(3, 2) / Math.cos(thetaYs[1])],
+            mm[idx(3, 3) / Math.cos(thetaYs[1])]
+        ),
+    ];
+
+    const thetaZs = [
+        Math.atan2(
+            mm[idx(2, 1)] / Math.cos(thetaYs[0]),
+            mm[idx(1, 1)] / Math.cos(thetaYs[0])
+        ),
+        Math.atan2(
+            mm[idx(2, 1)] / Math.cos(thetaYs[1]),
+            mm[idx(1, 1)] / Math.cos(thetaYs[1])
+        ),
+    ];
+
+    if (mm[idx(3, 1)] != 1) {
+        thetaX = thetaXs[0];
+        if (isNaN(thetaX)) thetaX = thetaXs[1];
+        if (isNaN(thetaX)) thetaX = 0;
+
+        thetaY = thetaYs[0];
+        if (isNaN(thetaY)) thetaY = thetaYs[1];
+        if (isNaN(thetaY)) thetaY = 0;
+
+        thetaZ = thetaZs[0];
+        if (isNaN(thetaZ)) thetaZ = thetaZs[1];
+        if (isNaN(thetaZ)) thetaZ = 0;
+    } else {
+        thetaZ = 0;
+
+        if (mm[idx(3, 1)] == -1) {
+            thetaY = Math.PI / 2;
+            thetaX = Math.atan2(mm[idx(1, 2)], mm[idx(1, 3)]);
+        } else {
+            thetaY = -Math.PI / 2;
+            thetaX = Math.atan2(-mm[idx(1, 2)], -mm[idx(1, 3)]);
+        }
+    }
+
+    return [thetaX, thetaY, thetaZ];
+}

@@ -37,6 +37,7 @@ const default3DFragmentShader = `
     uniform sampler2D u_texture;
     uniform bool u_showtex;
     uniform bool u_transparent;
+    uniform float u_opacity;
     
     void main() {
         if (u_showtex) {
@@ -47,7 +48,7 @@ const default3DFragmentShader = `
 
         if (u_transparent) {
             gl_FragColor[3] = 0.0;
-        }
+        } 
     }
 `;
 
@@ -56,15 +57,15 @@ export const DefaultShader: ProgramTemplate = {
     name: 'default',
     order: 0,
     objectDrawArgs: {
-        depthFunc: gl.LESS,
-        mode: gl.TRIANGLES,
+        depthFunc: gl?.LESS,
+        mode: gl?.TRIANGLES,
     },
     vertexShader: default3DVertexShader,
     fragmentShader: default3DFragmentShader,
     attributes: {
         a_color: {
             components: 3,
-            type: gl.UNSIGNED_BYTE,
+            type: gl?.UNSIGNED_BYTE,
             normalized: true,
             generateData: (engine) => {
                 return new Uint8Array(
@@ -76,7 +77,7 @@ export const DefaultShader: ProgramTemplate = {
         },
         a_position: {
             components: 3,
-            type: gl.FLOAT,
+            type: gl?.FLOAT,
             normalized: false,
             generateData: (engine) => {
                 return new Float32Array(
@@ -86,7 +87,7 @@ export const DefaultShader: ProgramTemplate = {
         },
         a_texcoord: {
             components: 2,
-            type: gl.FLOAT,
+            type: gl?.FLOAT,
             normalized: false,
             generateData: (engine) => {
                 return new Float32Array(

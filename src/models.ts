@@ -66,6 +66,7 @@ export type Obj3d = {
     visible?: boolean;
     scale?: [number, number, number];
     properties?: Record<any, any>;
+    additionalMatrix?: number[];
     _bbox?: bbox;
     _computed?: {
         positionMatrix: number[];
