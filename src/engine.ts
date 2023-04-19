@@ -298,6 +298,10 @@ export class Engine<T> {
         if (!this.activeScene) {
             this.setScene(scene.title);
         }
+
+        if (scene.once) {
+            scene.once(this);
+        }
     }
 
     setScene(title: string) {
@@ -506,6 +510,9 @@ export class Engine<T> {
                     obj._computed.positionMatrix,
                 ]);
             }
+        }
+
+        for (const obj of drawables) {
             obj._bbox = computeBbox(obj);
         }
 
@@ -690,8 +697,8 @@ function computeBbox(obj: Obj3d): bbox {
     // 3d space.
     return {
         x: positionMatrix[12],
-        y: positionMatrix[13],
-        z: positionMatrix[14],
+        y: -positionMatrix[13],
+        z: -positionMatrix[14],
         w: bboxMatrix[12],
         h: bboxMatrix[13],
         d: bboxMatrix[14],

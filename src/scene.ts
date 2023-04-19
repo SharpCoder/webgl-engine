@@ -11,6 +11,7 @@ export class Scene<T> {
     objects: Obj3d[];
     camera: Camera;
     engine: Engine<T>;
+    once?: (engine: Engine<T>) => void;
     init?: (engine: Engine<T>) => void;
     update: (time_t: number, engine: Engine<T>) => void;
     onClick?: (engine: Engine<T>) => void;
@@ -22,10 +23,12 @@ export class Scene<T> {
         update,
         shaders,
         status,
+        once,
         onClick,
         onMouseUp,
     }: {
         title: string;
+        once?: (engine: Engine<T>) => void;
         init?: (engine: Engine<T>) => void;
         update: (time_t: number, engine: Engine<T>) => void;
         onClick?: (engine: Engine<T>) => void;
@@ -41,6 +44,7 @@ export class Scene<T> {
         this.onMouseUp = onMouseUp;
         this.shaders = shaders;
         this.init = init;
+        this.once = once;
         this.status = status;
         this.camera = new Camera({});
     }
