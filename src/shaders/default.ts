@@ -57,6 +57,7 @@ export const DefaultShader: ProgramTemplate = {
     name: 'default',
     order: 0,
     objectDrawArgs: {
+        components: 3,
         depthFunc: gl?.LESS,
         mode: gl?.TRIANGLES,
     },

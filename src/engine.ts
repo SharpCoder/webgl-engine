@@ -394,6 +394,11 @@ export class Engine<T> {
                     program.compiledProgram,
                     attribute
                 );
+
+                if (loc < 0) {
+                    console.error('Failed to find attribute ' + attribute);
+                }
+
                 gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
                 gl.enableVertexAttribArray(loc);
                 gl.vertexAttribPointer(
@@ -543,11 +548,11 @@ export class Engine<T> {
                     program.dynamicUniforms[uniform](this, loc, obj);
                 }
 
-                if (obj.visible === false) {
-                    // Pretend we drew it already.
-                    offset += obj.vertexes.length / 3;
-                    continue;
-                }
+                // if (obj.visible === false) {
+                //     // Pretend we drew it already.
+                //     offset += obj.vertexes.length / 3;
+                //     continue;
+                // }
 
                 /// Apply the current texture if relevant
                 if (obj.texture && obj.texture.enabled !== false) {
@@ -583,12 +588,20 @@ export class Engine<T> {
                     }
                 }
 
+                const components = program.objectDrawArgs?.components ?? 3;
+
                 if (program.objectDrawArgs) {
                     const { mode } = program.objectDrawArgs;
-                    gl.drawArrays(mode, offset, obj.vertexes.length / 3);
+                    if (obj.visible !== false) {
+                        gl.drawArrays(
+                            mode,
+                            offset,
+                            obj.vertexes.length / components
+                        );
+                    }
                 }
 
-                offset += obj.vertexes.length / 3;
+                offset += obj.vertexes.length / components;
             }
 
             if (program.sceneDrawArgs) {

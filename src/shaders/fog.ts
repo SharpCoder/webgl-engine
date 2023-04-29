@@ -39,6 +39,7 @@ export const FogShader: ProgramTemplate = {
     name: 'fog',
     order: 1,
     objectDrawArgs: {
+        components: 3,
         depthFunc: gl?.LEQUAL,
         mode: gl?.TRIANGLES,
     },

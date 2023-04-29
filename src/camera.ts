@@ -7,6 +7,7 @@ export class Camera {
     offset: Vec3D;
     target?: Vec3D;
     colliding: boolean;
+    additionalMatrix?: number[];
 
     constructor({
         position,
@@ -64,11 +65,20 @@ export class Camera {
                 -this.position[1],
                 -this.position[2]
             ),
-            m4.rotateZ(this.rotation[2]),
-            m4.rotateY(this.rotation[1]),
-            m4.rotateX(this.rotation[0]),
-            m4.translate.apply(this, this.offset),
         ];
+
+        if (this.additionalMatrix) {
+            matrixes.push(this.additionalMatrix);
+        }
+
+        matrixes.push(
+            m4.combine([
+                m4.rotateZ(this.rotation[2]),
+                m4.rotateY(this.rotation[1]),
+                m4.rotateX(this.rotation[0]),
+                m4.translate.apply(this, this.offset),
+            ])
+        );
 
         const matrix = m4.combine(matrixes);
 

@@ -10,6 +10,7 @@ export type ProgramTemplate = {
     name: string;
     order: number;
     objectDrawArgs?: {
+        components: number;
         depthFunc: number;
         mode: number;
     };
