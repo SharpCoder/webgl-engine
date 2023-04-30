@@ -1,3 +1,4 @@
+import { Camera } from './camera';
 import { createProgram, createShader } from './helpers';
 import { Loader } from './loader';
 import { isPowerOf2, m4 } from './math';
@@ -41,10 +42,6 @@ export class Engine<T> {
 
     /** Values that are computed by the engine. */
     computed: EngineComputedValues;
-
-    private _locations: Record<string, WebGLUniformLocation>;
-    private _buffers: Record<string, WebGLBuffer>;
-    private _canvasId: number;
     private programs: Record<string, CompiledProgram>;
 
     // Input processes
@@ -88,8 +85,6 @@ export class Engine<T> {
         this.mousex = window.innerWidth / 2;
         this.mousey = window.innerHeight / 2;
         this.properties = {};
-        this._locations = {};
-        this._buffers = {};
         this._debugLogs = '';
         this.loader = new Loader();
         this.readyState = 'initialize';
@@ -513,6 +508,8 @@ export class Engine<T> {
         const drawables = activeScene.objects;
 
         for (const obj of drawables) {
+            if (shouldSkip(this.settings.zFar, camera, obj)) continue;
+
             obj._computed = {
                 positionMatrix: computePositionMatrix(obj),
             };
@@ -529,7 +526,8 @@ export class Engine<T> {
         }
 
         for (const obj of drawables) {
-            obj._bbox = computeBbox(obj);
+            if (shouldSkip(this.settings.zFar, camera, obj)) continue;
+            obj._bbox = computeBbox(activeScene, obj);
         }
 
         const programs = Object.values(this.programs);
@@ -546,11 +544,12 @@ export class Engine<T> {
                 program.staticUniforms[uniform](this, loc);
             }
 
-            let offset = 0;
             gl.depthFunc(program.objectDrawArgs?.depthFunc ?? gl.LESS);
             program.beforeDraw && program.beforeDraw.call(this, this);
 
             for (const obj of drawables) {
+                if (shouldSkip(this.settings.zFar, camera, obj)) continue;
+
                 for (const uniform in program.dynamicUniforms ?? {}) {
                     const loc = gl.getUniformLocation(
                         program.compiledProgram,
@@ -599,19 +598,21 @@ export class Engine<T> {
                 }
 
                 const components = program.objectDrawArgs?.components ?? 3;
+                const [offset, length] = activeScene.getOffsetAndLength(
+                    'vertex',
+                    obj.name
+                );
 
                 if (program.objectDrawArgs) {
                     const { mode } = program.objectDrawArgs;
                     if (obj.visible !== false) {
                         gl.drawArrays(
                             mode,
-                            offset,
-                            obj.vertexes.length / components
+                            offset / components,
+                            length / components
                         );
                     }
                 }
-
-                offset += obj.vertexes.length / components;
             }
 
             if (program.sceneDrawArgs) {
@@ -671,7 +672,22 @@ function computePositionMatrix(obj: Obj3d): number[] {
     return m4.combine(positionMatrixes);
 }
 
-function computeBbox(obj: Obj3d): bbox {
+function shouldSkip(zFar: number, camera: Camera, obj: Obj3d) {
+    if (obj.visible === false) return true;
+    if (obj.hideWhenFarAway) {
+        const dist = Math.hypot(
+            obj.position[0] - camera.position[0],
+            obj.position[1] - camera.position[1],
+            obj.position[2] - camera.position[2]
+        );
+        if (dist > 1.25 * zFar) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function computeBbox(activeScene: Scene<unknown>, obj: Obj3d): bbox {
     const positionMatrix = obj._computed?.positionMatrix ?? [];
     const scaleX = obj.scale?.[0] ?? 1.0;
     const scaleY = obj.scale?.[1] ?? 1.0;
@@ -680,11 +696,13 @@ function computeBbox(obj: Obj3d): bbox {
     // Calculate the dimensions
     const min = [Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE];
     const max = [-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE];
+    const [offset, length] = activeScene.getOffsetAndLength('vertex', obj.name);
+    const vertexes = activeScene.vertexes.slice(offset, offset + length);
 
     // Calculate the bounding box based on the vertexes
-    for (let r = 0; r < obj.vertexes.length / 3; r += 1) {
+    for (let r = 0; r < vertexes.length / 3; r += 1) {
         for (let i = 0; i < 3; i++) {
-            const axis = obj.vertexes[r * 3 + i];
+            const axis = vertexes[r * 3 + i];
             if (min[i] > axis) {
                 min[i] = axis;
             }

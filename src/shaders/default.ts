@@ -69,11 +69,7 @@ export const DefaultShader: ProgramTemplate = {
             type: gl?.UNSIGNED_BYTE,
             normalized: true,
             generateData: (engine) => {
-                return new Uint8Array(
-                    engine.activeScene.objects.flatMap(
-                        (obj) => obj.colors ?? []
-                    )
-                );
+                return new Uint8Array(engine.activeScene.colors);
             },
         },
         a_position: {
@@ -81,9 +77,7 @@ export const DefaultShader: ProgramTemplate = {
             type: gl?.FLOAT,
             normalized: false,
             generateData: (engine) => {
-                return new Float32Array(
-                    engine.activeScene.objects.flatMap((obj) => obj.vertexes)
-                );
+                return new Float32Array(engine.activeScene.vertexes);
             },
         },
         a_texcoord: {
@@ -91,17 +85,7 @@ export const DefaultShader: ProgramTemplate = {
             type: gl?.FLOAT,
             normalized: false,
             generateData: (engine) => {
-                return new Float32Array(
-                    engine.activeScene.objects.flatMap((obj) =>
-                        obj.texcoords &&
-                        obj.texture &&
-                        obj.texture.enabled !== false
-                            ? obj.texcoords
-                            : Flatten2D(
-                                  Repeat2D([0, 0], obj.vertexes.length / 3)
-                              )
-                    )
-                );
+                return new Float32Array(engine.activeScene.texcoords);
             },
         },
     },

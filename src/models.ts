@@ -52,10 +52,12 @@ export type CompiledProgram = ProgramTemplate & {
 };
 
 export type Obj3d = {
+    name: string;
     position: number[];
     rotation: number[];
     offsets: number[];
     vertexes: number[];
+    hideWhenFarAway?: boolean;
     transparent?: boolean;
     normals?: number[];
     allowClipping?: boolean;
