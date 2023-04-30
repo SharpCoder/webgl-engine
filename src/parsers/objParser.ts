@@ -1,4 +1,5 @@
 import type { ParsedModel } from '.';
+import { texture } from '../models';
 
 function parseNumbers(row: string, skip: number) {
     const result = row.trim().split(' ');
@@ -8,9 +9,13 @@ function parseNumbers(row: string, skip: number) {
         .map((item) => parseFloat(item));
 }
 
-export function OBJParser(file: string): ParsedModel {
+let materials = {};
+export async function OBJParser(
+    file: string,
+    path: string
+): Promise<ParsedModel> {
     const lines = file.split('\n');
-    let name = 'Unknown';
+    const basepath = path.substring(0, path.lastIndexOf('/') + 1);
     const positions: Array<number[]> = [[0, 0, 0]];
     const texcoords: Array<number[]> = [[0, 0, 0]];
     const normals: Array<number[]> = [[0, 0, 0]];
@@ -73,7 +78,6 @@ export function OBJParser(file: string): ParsedModel {
 
             case 'o': {
                 // Name?
-                name = parts[1];
                 continue;
             }
 
@@ -91,6 +95,47 @@ export function OBJParser(file: string): ParsedModel {
 
             case 'vn': {
                 normals.push(parseNumbers(line, 1));
+                continue;
+            }
+
+            case 'mtllib': {
+                // Fetch the material
+                if (materials[parts[1]] === undefined) {
+                    const mtlfile = await fetch(basepath + parts[1]).then(
+                        (blob) => blob.text()
+                    );
+                    materials[parts[1]] = parseMtl(mtlfile, basepath);
+                }
+
+                result.texture = materials[parts[1]];
+            }
+        }
+    }
+
+    console.log(result.texcoords);
+    console.log(result.texture);
+
+    return result;
+}
+
+function parseMtl(file: string, basepath: string): texture {
+    const lines = file.split('\n');
+    const result: texture = {
+        uri: '',
+        repeat_horizontal: 'clamp_to_edge',
+        repeat_vertical: 'clamp_to_edge',
+    };
+
+    for (const line of lines) {
+        const parts = line
+            .trim()
+            .replace(/  /g, ' ')
+            .split(' ')
+            .map((item) => item.trim());
+
+        switch (parts[0]) {
+            case 'map_Kd': {
+                result.uri = basepath + parts[1];
                 continue;
             }
         }

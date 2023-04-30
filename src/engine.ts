@@ -323,16 +323,8 @@ export class Engine<T> {
         }
     }
 
-    async _reconfigureBuffers() {
-        if (this.readyState === 'destroyed') return;
-
-        console.log('init reconfigure buffers');
-        console.time('reconfigure buffers');
-
+    async _loadTextures() {
         const { loader, activeScene, gl } = this;
-        if (!gl) return;
-
-        await this.setReady('loading');
 
         /***************************************
          * Load all of the texture first
@@ -355,7 +347,6 @@ export class Engine<T> {
 
         await Promise.all(promises);
         console.timeEnd('load textures');
-
         console.time('bind textures');
 
         for (const texture of Object.keys(textureMap)) {
@@ -423,16 +414,36 @@ export class Engine<T> {
          * *************************************/
         console.time('load texture buffer');
         for (const obj of activeScene.objects) {
-            if (obj.texture && obj.texture.enabled !== false) {
+            if (
+                obj.texture &&
+                obj.texture.uri.length > 0 &&
+                obj.texture.enabled !== false
+            ) {
                 const image = loader.fetch(obj.texture.uri);
-                obj.texture._computed = {
-                    webglTexture: textureMap[obj.texture.uri],
-                    square: isPowerOf2(image.width) && isPowerOf2(image.height),
-                };
+                if (image) {
+                    obj.texture._computed = {
+                        webglTexture: textureMap[obj.texture.uri],
+                        square:
+                            isPowerOf2(image.width) && isPowerOf2(image.height),
+                    };
+                }
             }
         }
 
         console.timeEnd('load texture buffer');
+    }
+
+    async _reconfigureBuffers() {
+        if (this.readyState === 'destroyed') return;
+
+        console.log('init reconfigure buffers');
+        console.time('reconfigure buffers');
+
+        const { gl } = this;
+        if (!gl) return;
+
+        await this.setReady('loading');
+        await this._loadTextures();
 
         for (const program of Object.values(this.programs)) {
             this.useProgram(program);
@@ -548,14 +559,13 @@ export class Engine<T> {
                     program.dynamicUniforms[uniform](this, loc, obj);
                 }
 
-                // if (obj.visible === false) {
-                //     // Pretend we drew it already.
-                //     offset += obj.vertexes.length / 3;
-                //     continue;
-                // }
-
                 /// Apply the current texture if relevant
+                // Check if the current texture is loaded
                 if (obj.texture && obj.texture.enabled !== false) {
+                    if (!this.loader.isLoaded(obj.texture.uri)) {
+                        await this._loadTextures();
+                    }
+
                     const { webglTexture, square } = obj.texture._computed;
                     gl.bindTexture(gl.TEXTURE_2D, webglTexture);
 

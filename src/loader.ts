@@ -5,6 +5,10 @@ export class Loader {
         this.images = {};
     }
 
+    isLoaded(imageUrl: string) {
+        return this.images[imageUrl] !== undefined;
+    }
+
     load(imageUrl: string) {
         return new Promise<void>((resolve) => {
             if (!this.images[imageUrl]) {

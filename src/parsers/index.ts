@@ -1,3 +1,4 @@
+import { texture } from '../models';
 import { OBJParser } from './objParser';
 import { OFFParser } from './offParser';
 
@@ -5,11 +6,13 @@ export type ParsedModel = {
     normals: number[];
     vertexes: number[];
     texcoords: number[];
+    texture?: texture;
 };
 
 export type Extensions = 'off' | 'obj';
 export async function loadModel(
     file: Blob,
+    path: string,
     extension: Extensions,
     normalize?: boolean
 ): Promise<ParsedModel> {
@@ -21,7 +24,7 @@ export async function loadModel(
         }
 
         case 'obj': {
-            parsedModel = OBJParser(await file.text());
+            parsedModel = await OBJParser(await file.text(), path);
         }
     }
 

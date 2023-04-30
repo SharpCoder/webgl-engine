@@ -23,7 +23,7 @@ const default3DVertexShader = `
         }
 
         v_color = a_color;
-        v_texcoord = a_texcoord;
+        v_texcoord = vec2(a_texcoord.x, 1.0 - a_texcoord.y);
     }
 `;
 
@@ -98,10 +98,7 @@ export const DefaultShader: ProgramTemplate = {
                         obj.texture.enabled !== false
                             ? obj.texcoords
                             : Flatten2D(
-                                  Repeat2D(
-                                      [0, 0],
-                                      (obj.vertexes.length / 3) * 2
-                                  )
+                                  Repeat2D([0, 0], obj.vertexes.length / 3)
                               )
                     )
                 );
