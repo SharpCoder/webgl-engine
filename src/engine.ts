@@ -688,6 +688,16 @@ function shouldSkip(zFar: number, camera: Camera, obj: Obj3d) {
 }
 
 function computeBbox(activeScene: Scene<unknown>, obj: Obj3d): bbox {
+    if (obj.computeBbox !== true)
+        return {
+            x: 0,
+            y: 0,
+            z: 0,
+            w: 0,
+            h: 0,
+            d: 0,
+        };
+
     const positionMatrix = obj._computed?.positionMatrix ?? [];
     const scaleX = obj.scale?.[0] ?? 1.0;
     const scaleY = obj.scale?.[1] ?? 1.0;

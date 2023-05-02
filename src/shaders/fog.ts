@@ -51,9 +51,7 @@ export const FogShader: ProgramTemplate = {
             type: gl?.FLOAT,
             normalized: false,
             generateData: (engine) => {
-                return new Float32Array(
-                    engine.activeScene.objects.flatMap((obj) => obj.vertexes)
-                );
+                return new Float32Array(engine.activeScene.vertexes);
             },
         },
     },

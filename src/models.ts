@@ -57,6 +57,7 @@ export type Obj3d = {
     rotation: number[];
     offsets: number[];
     vertexes: number[];
+    computeBbox?: boolean;
     hideWhenFarAway?: boolean;
     transparent?: boolean;
     normals?: number[];

@@ -163,8 +163,9 @@ export class Scene<T> {
         // Collect all root and child nodes.
         while (queue.length > 0) {
             const obj = queue.pop();
-            if (obj && this.objects.indexOf(obj) >= 0) {
-                this.objects.splice(this.objects.indexOf(obj), 1);
+            const index = this.objects.indexOf(obj);
+            if (obj && index >= 0) {
+                this.objects.splice(index, 1);
                 if (obj.children) {
                     for (const child of obj.children) {
                         child._parent = obj;

@@ -112,9 +112,6 @@ export async function OBJParser(
         }
     }
 
-    console.log(result.texcoords);
-    console.log(result.texture);
-
     return result;
 }
 
@@ -141,5 +138,6 @@ function parseMtl(file: string, basepath: string): texture {
         }
     }
 
+    if (result.uri.length === 0) return undefined;
     return result;
 }
