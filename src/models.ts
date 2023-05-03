@@ -90,6 +90,18 @@ export type bbox = {
 
 export type repeat_mode = 'repeat' | 'clamp_to_edge' | 'mirrored_repeat';
 
+export type Material = {
+    name: string;
+    shininess?: number;
+    ambient?: number[];
+    diffuse?: number[];
+    specular?: number[];
+    emissive?: number[];
+    opticalDensity?: number;
+    illum?: number;
+    opacity?: number;
+};
+
 export type texture = {
     uri: string;
     repeat_horizontal: repeat_mode;

@@ -32,7 +32,7 @@ const default3DFragmentShader = `
     
     varying vec4 v_color;
     varying vec2 v_texcoord;
-
+    
     // The texture
     uniform sampler2D u_texture;
     uniform bool u_showtex;

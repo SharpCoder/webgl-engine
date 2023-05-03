@@ -1,4 +1,4 @@
-import { texture } from '../models';
+import { Obj3d, texture } from '../models';
 import { OBJParser } from './objParser';
 import { OFFParser } from './offParser';
 
@@ -8,7 +8,7 @@ export type ParsedModel = {
     vertexes: number[];
     texcoords: number[];
     texture?: texture;
-};
+} & Partial<Obj3d>;
 
 export type Extensions = 'off' | 'obj';
 export async function loadModel(
