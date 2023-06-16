@@ -561,38 +561,43 @@ export class Engine<T> {
                 /// Apply the current texture if relevant
                 // Check if the current texture is loaded
                 if (obj.texture && obj.texture.enabled !== false) {
-                    if (!this.loader.isLoaded(obj.texture.uri)) {
+                    if (
+                        !this.loader.isLoaded(obj.texture.uri) ||
+                        obj.texture._computed === undefined
+                    ) {
                         await this._loadTextures();
                     }
 
-                    const { webglTexture, square } = obj.texture._computed;
-                    gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+                    if (obj && obj.texture) {
+                        const { webglTexture, square } = obj.texture._computed;
+                        gl.bindTexture(gl.TEXTURE_2D, webglTexture);
 
-                    if (obj.texture._computed) {
-                        if (square) {
-                            gl.texParameteri(
-                                gl.TEXTURE_2D,
-                                gl.TEXTURE_WRAP_S,
-                                REPEAT_MAP[obj.texture.repeat_horizontal]
-                            );
+                        if (obj.texture._computed) {
+                            if (square) {
+                                gl.texParameteri(
+                                    gl.TEXTURE_2D,
+                                    gl.TEXTURE_WRAP_S,
+                                    REPEAT_MAP[obj.texture.repeat_horizontal]
+                                );
 
-                            gl.texParameteri(
-                                gl.TEXTURE_2D,
-                                gl.TEXTURE_WRAP_T,
-                                REPEAT_MAP[obj.texture.repeat_vertical]
-                            );
-                        } else {
-                            gl.texParameteri(
-                                gl.TEXTURE_2D,
-                                gl.TEXTURE_WRAP_S,
-                                gl.CLAMP_TO_EDGE
-                            );
+                                gl.texParameteri(
+                                    gl.TEXTURE_2D,
+                                    gl.TEXTURE_WRAP_T,
+                                    REPEAT_MAP[obj.texture.repeat_vertical]
+                                );
+                            } else {
+                                gl.texParameteri(
+                                    gl.TEXTURE_2D,
+                                    gl.TEXTURE_WRAP_S,
+                                    gl.CLAMP_TO_EDGE
+                                );
 
-                            gl.texParameteri(
-                                gl.TEXTURE_2D,
-                                gl.TEXTURE_WRAP_T,
-                                gl.CLAMP_TO_EDGE
-                            );
+                                gl.texParameteri(
+                                    gl.TEXTURE_2D,
+                                    gl.TEXTURE_WRAP_T,
+                                    gl.CLAMP_TO_EDGE
+                                );
+                            }
                         }
                     }
                 }

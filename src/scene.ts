@@ -131,8 +131,10 @@ export class Scene<T> {
         this.objects.splice(0, this.objects.length);
         this.vertexes = [];
         this.texcoords = [];
+        this.colors = [];
         this.vertexMetadata = {};
         this.texcoordMetadata = {};
+        this.colorMetadata = {};
     }
 
     addObject(obj: Obj3d) {
@@ -142,8 +144,6 @@ export class Scene<T> {
             const obj = queue.pop();
             if (obj) {
                 this.registerObject(obj);
-                delete obj.vertexes;
-                delete obj.texcoords;
                 this.objects.push(obj);
 
                 if (obj.children) {
