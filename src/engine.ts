@@ -36,6 +36,8 @@ export class Engine<T> {
     };
     properties: Partial<T>;
     readyState: ReadyState;
+    /** How many requests to load textures have been initiated. When this is zero, you can safely render. Probably. */
+    textureLoadCount: number;
     onReadyChange?: (ready: ReadyState) => void;
     _debugLogs: string;
     loader: Loader;
@@ -88,6 +90,7 @@ export class Engine<T> {
         this._debugLogs = '';
         this.loader = new Loader();
         this.readyState = 'initialize';
+        this.textureLoadCount = 0;
 
         // Configure the event listeners
         this.keydownListener = this._handleKeydown.bind(this);
@@ -321,6 +324,8 @@ export class Engine<T> {
     async _loadTextures() {
         const { loader, activeScene, gl } = this;
 
+        this.textureLoadCount += 1;
+
         /***************************************
          * Load all of the texture first
          * *************************************/
@@ -426,6 +431,7 @@ export class Engine<T> {
         }
 
         console.timeEnd('load texture buffer');
+        this.textureLoadCount -= 1;
     }
 
     async _reconfigureBuffers() {
