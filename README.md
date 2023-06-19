@@ -1,12 +1,19 @@
 # webgl-engine
 
-WebGL Engine is a typescript library for making games! It is intended as a learning platform to grow my openGL knowledge, 
+WebGL Engine is a typescript library for making games! It is intended as a learning platform to grow my openGL knowledge,
 as such, it's probably only useful for game jams and education. A lot of the concepts come from the wonderful [WebGL Fundamentals](https://webglfundamentals.org/)
 but the engine itself is my own construct. I've taken their ideas and adapted it to something a little reusable.
 
 ## Installation
 
-Hmm, maybe copy the code and include it? This isn't published anywhere yet.
+Hmm, maybe copy the code and include it? This isn't published to npm, although, you can reference it in your package.json
+with a little bit of magic. This is how I do it for other projects:
+
+```
+"dependencies": {
+    "webgl-engine": "git+git@github.com:SharpCoder/webgl-engine.git"
+},
+```
 
 ## Usage
 
