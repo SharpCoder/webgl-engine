@@ -14,8 +14,10 @@ export type ProgramTemplate = {
         depthFunc: number;
         mode: number;
     };
+    init?: (self: ProgramTemplate, engine: Engine<unknown>) => void;
     beforeDraw?: (engine: Engine<unknown>) => void;
     afterDraw?: (engine: Engine<unknown>) => void;
+    properties?: Record<any, any>;
     sceneDrawArgs?: {
         depthFunc: number;
         mode: number;
@@ -109,6 +111,7 @@ export type texture = {
     enabled?: boolean;
     _computed?: {
         webglTexture: WebGLTexture;
+        image: HTMLImageElement;
         square: boolean;
     };
 };
@@ -128,7 +131,7 @@ export function Repeat(arr: Vec3D, qty: number): Vec3D[] {
 export function Flatten(arr: Vec3DArray): number[] {
     const data = [...arr];
 
-    if (Array.isArray(data[0][0])) {
+    if (Array.isArray(data[0]?.[0])) {
         return (data as Vec3D[][]).flatMap((num) => num).flatMap((num) => num);
     } else {
         return (data as Vec3D[]).flatMap((num) => num);

@@ -115,6 +115,12 @@ export class Engine<T> {
 
     attachProgram(template: ProgramTemplate) {
         const { gl } = this;
+
+        template.properties = template.properties ?? {};
+        if (template.init) {
+            template.init(template, this);
+        }
+
         const result: CompiledProgram = {
             ...template,
             compiledProgram: createProgram(
@@ -422,6 +428,7 @@ export class Engine<T> {
                 const image = loader.fetch(obj.texture.uri);
                 if (image) {
                     obj.texture._computed = {
+                        image,
                         webglTexture: textureMap[obj.texture.uri],
                         square:
                             isPowerOf2(image.width) && isPowerOf2(image.height),
@@ -556,56 +563,21 @@ export class Engine<T> {
             for (const obj of drawables) {
                 if (shouldSkip(this.settings.zFar, camera, obj)) continue;
 
+                if (
+                    obj &&
+                    obj.texture &&
+                    (!this.loader.isLoaded(obj.texture.uri) ||
+                        obj.texture._computed === undefined)
+                ) {
+                    await this._loadTextures();
+                }
+
                 for (const uniform in program.dynamicUniforms ?? {}) {
                     const loc = gl.getUniformLocation(
                         program.compiledProgram,
                         uniform
                     );
                     program.dynamicUniforms[uniform](this, loc, obj);
-                }
-
-                /// Apply the current texture if relevant
-                // Check if the current texture is loaded
-                if (obj.texture && obj.texture.enabled !== false) {
-                    if (
-                        !this.loader.isLoaded(obj.texture.uri) ||
-                        obj.texture._computed === undefined
-                    ) {
-                        await this._loadTextures();
-                    }
-
-                    if (obj && obj.texture) {
-                        const { webglTexture, square } = obj.texture._computed;
-                        gl.bindTexture(gl.TEXTURE_2D, webglTexture);
-
-                        if (obj.texture._computed) {
-                            if (square) {
-                                gl.texParameteri(
-                                    gl.TEXTURE_2D,
-                                    gl.TEXTURE_WRAP_S,
-                                    REPEAT_MAP[obj.texture.repeat_horizontal]
-                                );
-
-                                gl.texParameteri(
-                                    gl.TEXTURE_2D,
-                                    gl.TEXTURE_WRAP_T,
-                                    REPEAT_MAP[obj.texture.repeat_vertical]
-                                );
-                            } else {
-                                gl.texParameteri(
-                                    gl.TEXTURE_2D,
-                                    gl.TEXTURE_WRAP_S,
-                                    gl.CLAMP_TO_EDGE
-                                );
-
-                                gl.texParameteri(
-                                    gl.TEXTURE_2D,
-                                    gl.TEXTURE_WRAP_T,
-                                    gl.CLAMP_TO_EDGE
-                                );
-                            }
-                        }
-                    }
                 }
 
                 const components = program.objectDrawArgs?.components ?? 3;
@@ -683,7 +655,7 @@ function computePositionMatrix(obj: Obj3d): number[] {
     return m4.combine(positionMatrixes);
 }
 
-function shouldSkip(zFar: number, camera: Camera, obj: Obj3d) {
+export function shouldSkip(zFar: number, camera: Camera, obj: Obj3d) {
     if (obj.visible === false) return true;
     if (obj.hideWhenFarAway) {
         const dist = Math.hypot(

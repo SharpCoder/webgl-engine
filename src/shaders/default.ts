@@ -111,6 +111,32 @@ export const DefaultShader: ProgramTemplate = {
                 obj.texture && obj.texture.enabled !== false ? 1 : 0
             );
         },
+        u_texture: (engine, loc, obj) => {
+            const { gl } = engine;
+            /// Apply the current texture if relevant
+            // Check if the current texture is loaded
+            if (obj && obj.texture && obj.texture.enabled !== false) {
+                const { webglTexture, square } = obj.texture._computed;
+                if (obj.texture._computed) {
+                    gl.texParameteri(
+                        gl.TEXTURE_2D,
+                        gl.TEXTURE_WRAP_S,
+                        gl.CLAMP_TO_EDGE
+                    );
+                    gl.texParameteri(
+                        gl.TEXTURE_2D,
+                        gl.TEXTURE_WRAP_T,
+                        gl.CLAMP_TO_EDGE
+                    );
+                }
+
+                // This ensures the image is loaded into
+                // u_texture properly.
+                gl.uniform1i(loc, 0);
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, webglTexture);
+            }
+        },
         u_transparent: (engine, loc, obj) => {
             const { gl } = engine;
             gl.uniform1i(loc, obj.transparent === true ? 1 : 0);

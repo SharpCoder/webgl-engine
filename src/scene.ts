@@ -28,6 +28,8 @@ export class Scene<T> {
     colorMetadata: Record<string, { offset: number; length: number }>;
     vertexes: number[];
     vertexMetadata: Record<string, { offset: number; length: number }>;
+    normals: number[];
+    normalMetadata: Record<string, { offset: number; length: number }>;
     texcoords: number[];
     texcoordMetadata: Record<string, { offset: number; length: number }>;
 
@@ -63,16 +65,30 @@ export class Scene<T> {
         this.colors = [];
         this.vertexes = [];
         this.texcoords = [];
+        this.normals = [];
         this.vertexMetadata = {};
         this.texcoordMetadata = {};
         this.colorMetadata = {};
+        this.normalMetadata = {};
         this.camera = new Camera({});
+    }
+
+    getObject(name: string): Obj3d | null {
+        for (const obj of this.objects) {
+            if (obj.name === name) {
+                return obj;
+            }
+        }
+
+        return null;
     }
 
     private registerObject(obj: Obj3d) {
         let name = obj.name;
         if (!this.vertexMetadata[name]) {
             const vertexes = obj.vertexes;
+            const normals =
+                obj.normals ?? Flatten(Repeat([0, 0, 0], vertexes.length / 3));
             const colors =
                 obj.colors ?? Flatten(Repeat([0, 0, 0], vertexes.length / 3));
             const texcoords =
@@ -85,6 +101,11 @@ export class Scene<T> {
                 length: vertexes.length,
             };
 
+            this.normalMetadata[name] = {
+                offset: this.normals.length,
+                length: normals.length,
+            };
+
             this.texcoordMetadata[name] = {
                 offset: this.texcoords.length,
                 length: texcoords.length,
@@ -94,6 +115,10 @@ export class Scene<T> {
                 offset: this.colors.length,
                 length: colors.length,
             };
+
+            for (const normal of normals) {
+                this.normals.push(normal);
+            }
 
             for (const color of colors) {
                 this.colors.push(color);
@@ -109,12 +134,19 @@ export class Scene<T> {
         }
     }
 
-    getOffsetAndLength(type: 'texcoord' | 'vertex', name: string) {
+    getOffsetAndLength(type: 'texcoord' | 'vertex' | 'normals', name: string) {
         switch (type) {
             case 'texcoord': {
                 return [
                     this.texcoordMetadata[name].offset,
                     this.texcoordMetadata[name].length,
+                ];
+            }
+
+            case 'normals': {
+                return [
+                    this.normalMetadata[name].offset,
+                    this.normalMetadata[name].length,
                 ];
             }
 
