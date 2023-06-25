@@ -494,6 +494,8 @@ export class Engine<T> {
             return;
         } else if (this.activeScene.visible === false) {
             return;
+        } else if (this.textureLoadCount > 0) {
+            return;
         }
 
         const REPEAT_MAP: Record<repeat_mode, number> = {

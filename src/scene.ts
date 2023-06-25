@@ -9,6 +9,10 @@ import {
     Repeat2D,
 } from './models';
 
+function del(obj: Record<any, any>) {
+    for (const prop in obj) delete obj[prop];
+}
+
 export type SceneStatus = 'initializing' | 'ready';
 export class Scene<T> {
     title: string;
@@ -160,13 +164,16 @@ export class Scene<T> {
     }
 
     clear() {
-        this.objects.splice(0, this.objects.length);
-        this.vertexes = [];
-        this.texcoords = [];
-        this.colors = [];
-        this.vertexMetadata = {};
-        this.texcoordMetadata = {};
-        this.colorMetadata = {};
+        this.objects.length = 0;
+        this.vertexes.length = 0;
+        this.texcoords.length = 0;
+        this.normals.length = 0;
+        this.colors.length = 0;
+
+        del(this.vertexMetadata);
+        del(this.texcoordMetadata);
+        del(this.colorMetadata);
+        del(this.normalMetadata);
     }
 
     addObject(obj: Obj3d) {
