@@ -385,43 +385,6 @@ export class Engine<T> {
         }
         console.timeEnd('bind textures');
 
-        for (const program of Object.values(this.programs)) {
-            this.useProgram(program);
-
-            // Parse the attributes
-            for (const attribute in program.attributes) {
-                console.time(`loading attribute ${attribute}`);
-                const data = program.attributes[attribute];
-                const loc = gl.getAttribLocation(
-                    program.compiledProgram,
-                    attribute
-                );
-
-                if (loc < 0) {
-                    console.error('Failed to find attribute ' + attribute);
-                }
-
-                if (data.buffer) {
-                    gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
-                    gl.enableVertexAttribArray(loc);
-                    gl.vertexAttribPointer(
-                        loc,
-                        data.components,
-                        data.type,
-                        data.normalized,
-                        0,
-                        0
-                    );
-                    gl.bufferData(
-                        gl.ARRAY_BUFFER,
-                        data.generateData(this),
-                        gl.STATIC_DRAW
-                    );
-                }
-                console.timeEnd(`loading attribute ${attribute}`);
-            }
-        }
-
         /***************************************
          * Handle texture
          * *************************************/
