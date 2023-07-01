@@ -28,7 +28,7 @@ export type ProgramTemplate = {
     attributes: Record<
         string,
         {
-            buffer?: WebGLBuffer;
+            buffer?: WebGLBuffer | null;
             components: number;
             normalized: boolean;
             type: number;
@@ -123,6 +123,7 @@ export function Vec3(x: number, y: number, z: number): Vec3D {
 export function Repeat(arr: Vec3D, qty: number): Vec3D[] {
     const result = [];
     for (let i = 0; i < qty; i++) {
+        // @ts-ignore
         result.push([...arr]);
     }
     return result;
@@ -139,8 +140,9 @@ export function Flatten(arr: Vec3DArray): number[] {
 }
 
 export function Repeat2D(arr: Vec2DArray | Vec2D, qty: number): Vec2D[] {
-    const result = [];
+    const result: Vec2D[] = [];
     for (let i = 0; i < qty; i++) {
+        // @ts-ignore
         result.push([...arr]);
     }
     return result;

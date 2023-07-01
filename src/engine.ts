@@ -144,21 +144,24 @@ export class Engine<T> {
                 program.compiledProgram,
                 attribute
             );
-            gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
-            gl.enableVertexAttribArray(loc);
-            gl.vertexAttribPointer(
-                loc,
-                data.components,
-                data.type,
-                data.normalized,
-                0,
-                0
-            );
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                data.generateData(this),
-                gl.STATIC_DRAW
-            );
+
+            if (data.buffer) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
+                gl.enableVertexAttribArray(loc);
+                gl.vertexAttribPointer(
+                    loc,
+                    data.components,
+                    data.type,
+                    data.normalized,
+                    0,
+                    0
+                );
+                gl.bufferData(
+                    gl.ARRAY_BUFFER,
+                    data.generateData(this),
+                    gl.STATIC_DRAW
+                );
+            }
         }
     }
 
@@ -168,10 +171,12 @@ export class Engine<T> {
 
     setCanvas(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
-        this.gl = canvas.getContext('webgl');
+        this.gl = canvas.getContext('webgl') as WebGL2RenderingContext;
 
         const { gl } = this;
+        // @ts-ignore
         gl.canvas.width = gl.canvas.clientWidth;
+        // @ts-ignore
         gl.canvas.height = gl.canvas.clientHeight;
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -337,7 +342,7 @@ export class Engine<T> {
          * *************************************/
         // Collect all the textures
         console.time('load textures');
-        const textureMap: Record<string, WebGLTexture> = {};
+        const textureMap: Record<string, WebGLTexture | null> = {};
 
         for (const obj of activeScene.objects) {
             if (obj.texture && obj.texture.enabled !== false) {
@@ -346,7 +351,7 @@ export class Engine<T> {
         }
 
         // Load each texture, async but blocking.
-        const promises = [];
+        const promises: Promise<any>[] = [];
         for (const texture of Object.keys(textureMap)) {
             promises.push(loader.load(texture));
         }
@@ -396,21 +401,23 @@ export class Engine<T> {
                     console.error('Failed to find attribute ' + attribute);
                 }
 
-                gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
-                gl.enableVertexAttribArray(loc);
-                gl.vertexAttribPointer(
-                    loc,
-                    data.components,
-                    data.type,
-                    data.normalized,
-                    0,
-                    0
-                );
-                gl.bufferData(
-                    gl.ARRAY_BUFFER,
-                    data.generateData(this),
-                    gl.STATIC_DRAW
-                );
+                if (data.buffer) {
+                    gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
+                    gl.enableVertexAttribArray(loc);
+                    gl.vertexAttribPointer(
+                        loc,
+                        data.components,
+                        data.type,
+                        data.normalized,
+                        0,
+                        0
+                    );
+                    gl.bufferData(
+                        gl.ARRAY_BUFFER,
+                        data.generateData(this),
+                        gl.STATIC_DRAW
+                    );
+                }
                 console.timeEnd(`loading attribute ${attribute}`);
             }
         }
@@ -426,10 +433,11 @@ export class Engine<T> {
                 obj.texture.enabled !== false
             ) {
                 const image = loader.fetch(obj.texture.uri);
-                if (image) {
+                const webglTexture = textureMap[obj.texture.uri];
+                if (image && webglTexture) {
                     obj.texture._computed = {
                         image,
-                        webglTexture: textureMap[obj.texture.uri],
+                        webglTexture,
                         square:
                             isPowerOf2(image.width) && isPowerOf2(image.height),
                     };
@@ -461,7 +469,14 @@ export class Engine<T> {
                     program.compiledProgram,
                     uniform
                 );
-                program.constantUniforms[uniform](this, loc);
+
+                if (
+                    loc &&
+                    program.constantUniforms &&
+                    program.constantUniforms[uniform]
+                ) {
+                    program.constantUniforms[uniform](this, loc);
+                }
             }
         }
 
@@ -510,6 +525,7 @@ export class Engine<T> {
         // Compute the main values
         this.computed.projectionMatrix = m4.perspective(
             rads(this.settings.fov),
+            // @ts-ignore
             gl.canvas.clientWidth / gl.canvas.clientHeight,
             this.settings.zNear,
             this.settings.zFar
@@ -532,7 +548,7 @@ export class Engine<T> {
             // If it has a parent, merge the position matrixes.
             // This should always work, in theory, because of how the queue
             // is constructed (hierarchically).
-            if (obj._parent) {
+            if (obj._parent && obj._parent._computed) {
                 obj._computed.positionMatrix = m4.combine([
                     obj._parent._computed.positionMatrix,
                     obj._computed.positionMatrix,
@@ -556,7 +572,14 @@ export class Engine<T> {
                     program.compiledProgram,
                     uniform
                 );
-                program.staticUniforms[uniform](this, loc);
+                if (
+                    program &&
+                    program.staticUniforms &&
+                    program.staticUniforms[uniform] &&
+                    loc
+                ) {
+                    program.staticUniforms[uniform](this, loc);
+                }
             }
 
             gl.depthFunc(program.objectDrawArgs?.depthFunc ?? gl.LESS);
@@ -579,7 +602,15 @@ export class Engine<T> {
                         program.compiledProgram,
                         uniform
                     );
-                    program.dynamicUniforms[uniform](this, loc, obj);
+
+                    if (
+                        program &&
+                        program.dynamicUniforms &&
+                        program.dynamicUniforms[uniform] &&
+                        loc
+                    ) {
+                        program.dynamicUniforms[uniform](this, loc, obj);
+                    }
                 }
 
                 const components = program.objectDrawArgs?.components ?? 3;
