@@ -81,6 +81,8 @@ export type Obj3d = {
     beforeDraw?: (engine: Engine<unknown>) => void;
 } & Record<any, any>;
 
+export type Drawable = Obj3d;
+
 export type bbox = {
     x: number;
     y: number;
