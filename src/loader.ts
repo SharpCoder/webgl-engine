@@ -13,6 +13,7 @@ export class Loader {
         return new Promise<void>((resolve) => {
             if (!this.images[imageUrl]) {
                 this.images[imageUrl] = new Image();
+                this.images[imageUrl].crossOrigin = ''; // ask for (anonymous) permission to access the response
                 this.images[imageUrl].src = imageUrl;
                 this.images[imageUrl].addEventListener('load', () => resolve());
             } else {
