@@ -476,6 +476,19 @@ export class Engine<T> {
             return;
         }
 
+        if (
+            // @ts-ignore
+            gl.canvas.width != gl.canvas.clientWidth ||
+            // @ts-ignore
+            gl.canvas.height != gl.canvas.clientHeight
+        ) {
+            // @ts-ignore
+            gl.canvas.width = gl.canvas.clientWidth;
+            // @ts-ignore
+            gl.canvas.height = gl.canvas.clientHeight;
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        }
+
         const REPEAT_MAP: Record<repeat_mode, number> = {
             repeat: gl.REPEAT,
             clamp_to_edge: gl.CLAMP_TO_EDGE,
