@@ -11,6 +11,17 @@ export function rect2D(w: number, h: number) {
     ]);
 }
 
+export function tex2D(w: number, h: number) {
+    return Flatten([
+        [0, 0],
+        [w, h],
+        [0, h],
+        [0, 0],
+        [w, 0],
+        [w, h],
+    ]);
+}
+
 export function cuboid(w: number, h: number, d: number) {
     return Flatten([
         // Front

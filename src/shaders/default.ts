@@ -1,4 +1,4 @@
-import type { ProgramTemplate } from '../models';
+import type { ProgramTemplate, repeat_mode } from '../models';
 import { Flatten2D, Repeat2D } from '../models';
 
 const default3DVertexShader = `
@@ -53,6 +53,12 @@ const default3DFragmentShader = `
 `;
 
 const gl = document.createElement('canvas').getContext('webgl');
+const repeatMap: Record<repeat_mode, number | undefined> = {
+    clamp_to_edge: gl?.CLAMP_TO_EDGE,
+    mirrored_repeat: gl?.MIRRORED_REPEAT,
+    repeat: gl?.REPEAT,
+};
+
 export const DefaultShader: ProgramTemplate = {
     name: 'default',
     order: 0,
@@ -121,14 +127,20 @@ export const DefaultShader: ProgramTemplate = {
                     gl.texParameteri(
                         gl.TEXTURE_2D,
                         gl.TEXTURE_WRAP_S,
-                        gl.CLAMP_TO_EDGE
+                        repeatMap[obj.texture.repeat_horizontal] ??
+                            gl.CLAMP_TO_EDGE
                     );
                     gl.texParameteri(
                         gl.TEXTURE_2D,
                         gl.TEXTURE_WRAP_T,
-                        gl.CLAMP_TO_EDGE
+                        repeatMap[obj.texture.repeat_vertical] ??
+                            gl.CLAMP_TO_EDGE
                     );
                 }
+
+                // if (square) {
+                //     gl.generateMipmap(gl.TEXTURE_2D);
+                // }
 
                 // This ensures the image is loaded into
                 // u_texture properly.

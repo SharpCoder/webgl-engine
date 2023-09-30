@@ -644,7 +644,6 @@ function computePositionMatrix(obj: Obj3d): number[] {
     const scaleY = obj.scale?.[1] ?? 1.0;
     const scaleZ = obj.scale?.[2] ?? 1.0;
 
-    // console.log({ scaleX });
     let positionMatrixes = [
         m4.translate(obj.position[0], -obj.position[1], -obj.position[2]),
         m4.rotateX(obj.rotation[0]),
@@ -724,11 +723,7 @@ function computeBbox(activeScene: Scene<unknown>, obj: Obj3d): bbox {
         m4.rotateZ(obj.rotation[2]),
         m4.rotateY(obj.rotation[1]),
         m4.rotateX(obj.rotation[0]),
-        m4.translate(
-            width + obj.offsets[0],
-            height + obj.offsets[1],
-            depth + obj.offsets[2]
-        ),
+        m4.translate(width, height, depth),
         m4.scale(scaleX, scaleY, scaleZ),
     ];
 
@@ -743,7 +738,7 @@ function computeBbox(activeScene: Scene<unknown>, obj: Obj3d): bbox {
         y: -positionMatrix[13],
         z: -positionMatrix[14],
         w: bboxMatrix[12],
-        h: bboxMatrix[13],
-        d: bboxMatrix[14],
+        h: -bboxMatrix[13],
+        d: -bboxMatrix[14],
     };
 }
