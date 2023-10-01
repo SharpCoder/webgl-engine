@@ -375,9 +375,16 @@ export class Engine<T> {
                 image
             );
 
-            if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-                gl.generateMipmap(gl.TEXTURE_2D);
-            }
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE
+            );
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE
+            );
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -401,6 +408,8 @@ export class Engine<T> {
                     obj.texture._computed = {
                         image,
                         webglTexture,
+                        width: image.width,
+                        height: image.height,
                         square:
                             isPowerOf2(image.width) && isPowerOf2(image.height),
                     };
@@ -488,12 +497,6 @@ export class Engine<T> {
             gl.canvas.height = gl.canvas.clientHeight;
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         }
-
-        const REPEAT_MAP: Record<repeat_mode, number> = {
-            repeat: gl.REPEAT,
-            clamp_to_edge: gl.CLAMP_TO_EDGE,
-            mirrored_repeat: gl.MIRRORED_REPEAT,
-        };
 
         // Calculate the camera matrixes
         const { camera } = this.activeScene;

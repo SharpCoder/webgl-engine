@@ -12,118 +12,130 @@ export function rect2D(w: number, h: number) {
 }
 
 export function tex2D(w: number, h: number) {
-    return Flatten([
-        [0, 0],
-        [w, h],
-        [0, h],
-        [0, 0],
-        [w, 0],
-        [w, h],
-    ]);
+    return [0, 0, w, 0, w, h, 0, 0, w, h, 0, h];
 }
 
-export function cuboid(w: number, h: number, d: number) {
-    return Flatten([
-        // Front
-        Vec3(0, 0, 0),
-        Vec3(0, 0, d),
-        Vec3(0, h, d),
-        Vec3(0, h, 0),
-        Vec3(0, 0, 0),
-        Vec3(0, h, d),
-
-        // Left
-        Vec3(w, 0, 0),
-        Vec3(0, 0, 0),
-        Vec3(w, h, 0),
-        Vec3(w, h, 0),
-        Vec3(0, 0, 0),
-        Vec3(0, h, 0),
-
-        // Back
-        Vec3(w, 0, 0),
-        Vec3(w, h, 0),
-        Vec3(w, h, d),
-        Vec3(w, 0, d),
-        Vec3(w, 0, 0),
-        Vec3(w, h, d),
-
-        // Right
-        Vec3(w, h, d),
-        Vec3(0, 0, d),
-        Vec3(w, 0, d),
-        Vec3(w, h, d),
-        Vec3(0, h, d),
-        Vec3(0, 0, d),
-
-        // Top
-        Vec3(w, h, d),
-        Vec3(0, h, 0),
-        Vec3(0, h, d),
-        Vec3(w, h, d),
-        Vec3(w, h, 0),
-        Vec3(0, h, 0),
-
-        // Bottom
-        Vec3(0, 0, 0),
-        Vec3(w, 0, d),
-        Vec3(0, 0, d),
-        Vec3(w, 0, d),
-        Vec3(0, 0, 0),
-        Vec3(w, 0, 0),
-    ]);
+export function cuboid(w: number, d: number, h: number) {
+    return [
+        w,
+        d,
+        0,
+        0,
+        d,
+        0,
+        0,
+        d,
+        h,
+        w,
+        d,
+        0,
+        0,
+        d,
+        h,
+        w,
+        d,
+        h,
+        w,
+        0,
+        h,
+        w,
+        d,
+        h,
+        0,
+        d,
+        h,
+        w,
+        0,
+        h,
+        0,
+        d,
+        h,
+        0,
+        0,
+        h,
+        0,
+        0,
+        h,
+        0,
+        d,
+        h,
+        0,
+        d,
+        0,
+        0,
+        0,
+        h,
+        0,
+        d,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        w,
+        0,
+        0,
+        w,
+        0,
+        h,
+        0,
+        0,
+        0,
+        w,
+        0,
+        h,
+        0,
+        0,
+        h,
+        w,
+        0,
+        0,
+        w,
+        d,
+        0,
+        w,
+        d,
+        h,
+        w,
+        0,
+        0,
+        w,
+        d,
+        h,
+        w,
+        0,
+        h,
+        0,
+        0,
+        0,
+        0,
+        d,
+        0,
+        w,
+        d,
+        0,
+        0,
+        0,
+        0,
+        w,
+        d,
+        0,
+        w,
+        0,
+        0,
+    ];
 }
 
 export function cuboidNormals() {
-    return Flatten([
-        // Front
-        Vec3(0, 0, 1),
-        Vec3(0, 0, 1),
-        Vec3(0, 0, 1),
-        Vec3(0, 0, 1),
-        Vec3(0, 0, 1),
-        Vec3(0, 0, 1),
-
-        // Left
-        Vec3(-1, 0, 0),
-        Vec3(-1, 0, 0),
-        Vec3(-1, 0, 0),
-        Vec3(-1, 0, 0),
-        Vec3(-1, 0, 0),
-        Vec3(-1, 0, 0),
-
-        // Back
-        Vec3(0, 0, -1),
-        Vec3(0, 0, -1),
-        Vec3(0, 0, -1),
-        Vec3(0, 0, -1),
-        Vec3(0, 0, -1),
-        Vec3(0, 0, -1),
-
-        // Right
-        Vec3(1, 0, 0),
-        Vec3(1, 0, 0),
-        Vec3(1, 0, 0),
-        Vec3(1, 0, 0),
-        Vec3(1, 0, 0),
-        Vec3(1, 0, 0),
-
-        // Top
-        Vec3(0, 1, 0),
-        Vec3(0, 1, 0),
-        Vec3(0, 1, 0),
-        Vec3(0, 1, 0),
-        Vec3(0, 1, 0),
-        Vec3(0, 1, 0),
-
-        // Bottom
-        Vec3(0, -1, 0),
-        Vec3(0, -1, 0),
-        Vec3(0, -1, 0),
-        Vec3(0, -1, 0),
-        Vec3(0, -1, 0),
-        Vec3(0, -1, 0),
-    ]);
+    return [
+        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1,
+        0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+        0, -1, 0, 0, -1, 0, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0,
+        0, -1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0,
+        -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1,
+    ];
 }
 
 export function cylinder(sides, length, dia) {

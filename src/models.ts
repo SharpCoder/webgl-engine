@@ -115,6 +115,8 @@ export type texture = {
         webglTexture: WebGLTexture;
         image: HTMLImageElement;
         square: boolean;
+        width: number;
+        height: number;
     };
 };
 
