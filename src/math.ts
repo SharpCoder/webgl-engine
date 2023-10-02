@@ -68,7 +68,7 @@ export class m3 {
         ];
     }
 
-    static projection(width, height) {
+    static projection(width: number, height: number) {
         return [2 / width, 0, 0, 0, -2 / height, 0, -1, 1, 1];
     }
 }
@@ -417,7 +417,7 @@ export function norm(arr: number[]) {
     );
 }
 
-export function isPowerOf2(value) {
+export function isPowerOf2(value: number) {
     return (value & (value - 1)) == 0;
 }
 
@@ -455,7 +455,7 @@ export function getAnglesFromMatrix(mm: number[]) {
         thetaY = 0,
         thetaZ = 0;
 
-    function idx(row, col) {
+    function idx(row: number, col: number) {
         return (col - 1) * 4 + row - 1;
     }
 
@@ -480,7 +480,7 @@ export function getAnglesFromMatrix2(mm: number[]) {
         thetaY = 0,
         thetaZ = 0;
 
-    function idx(row, col) {
+    function idx(row: number, col: number) {
         return (col - 1) * 4 + row - 1;
     }
 

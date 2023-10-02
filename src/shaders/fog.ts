@@ -1,3 +1,4 @@
+import { m4 } from '..';
 import type { ProgramTemplate } from '../models';
 
 const fogVertexShader = `
@@ -34,14 +35,16 @@ void main() {
 }
 `;
 
-const gl = document.createElement('canvas').getContext('webgl');
+const gl = document
+    .createElement('canvas')
+    .getContext('webgl') as WebGLRenderingContext;
 export const FogShader: ProgramTemplate = {
     name: 'fog',
     order: 1,
     objectDrawArgs: {
         components: 3,
-        depthFunc: gl?.LEQUAL,
-        mode: gl?.TRIANGLES,
+        depthFunc: gl.LEQUAL,
+        mode: gl.TRIANGLES,
         blend: false,
     },
     vertexShader: fogVertexShader,
@@ -49,7 +52,7 @@ export const FogShader: ProgramTemplate = {
     attributes: {
         a_position: {
             components: 3,
-            type: gl?.FLOAT,
+            type: gl.FLOAT,
             normalized: false,
             generateData: (engine) => {
                 return new Float32Array(engine.activeScene.vertexes);
@@ -81,7 +84,11 @@ export const FogShader: ProgramTemplate = {
     dynamicUniforms: {
         u_worldView: (engine, loc, obj) => {
             const { gl } = engine;
-            gl.uniformMatrix4fv(loc, false, obj._computed.positionMatrix);
+            gl.uniformMatrix4fv(
+                loc,
+                false,
+                obj._computed?.positionMatrix ?? m4.identity()
+            );
         },
     },
 };

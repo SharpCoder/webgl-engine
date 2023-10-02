@@ -22,11 +22,14 @@ export type EngineComputedValues = {
 } & Record<string, any>;
 
 export class Engine<T> {
+    // @ts-ignore
     canvas: HTMLCanvasElement;
+    // @ts-ignore
     gl: WebGLRenderingContext;
     id: number;
     lastTime: number;
     scenes: Scene<T>[];
+    // @ts-ignore
     activeScene: Scene<T>;
     settings: {
         fov: number;
@@ -48,7 +51,7 @@ export class Engine<T> {
     private programs: Record<string, CompiledProgram>;
 
     // Lighting-specific shaders
-    private lightShader: CompiledProgram;
+    private lightShader?: CompiledProgram;
 
     // Input processes
     keymap: Record<string, boolean>;
@@ -117,7 +120,7 @@ export class Engine<T> {
         this.setCanvas(canvas);
     }
 
-    private compileProgram(template: ProgramTemplate): CompiledProgram {
+    private compileProgram(template: ProgramTemplate): CompiledProgram | null {
         const { gl } = this;
 
         template.properties = template.properties ?? {};
@@ -125,20 +128,27 @@ export class Engine<T> {
             template.init(template, this);
         }
 
-        const result: CompiledProgram = {
-            ...template,
-            compiledProgram: createProgram(
-                gl,
-                createShader(gl, gl.VERTEX_SHADER, template.vertexShader),
-                createShader(gl, gl.FRAGMENT_SHADER, template.fragmentShader)
-            ),
-        };
+        const program = createProgram(
+            gl,
+            template.vertexShader,
+            template.fragmentShader
+        );
 
-        return result;
+        if (program) {
+            return {
+                ...template,
+                compiledProgram: program,
+            };
+        }
+
+        return null;
     }
 
     attachProgram(template: ProgramTemplate) {
-        this.programs[template.name] = this.compileProgram(template);
+        const compiled = this.compileProgram(template);
+        if (compiled) {
+            this.programs[template.name] = compiled;
+        }
     }
 
     useProgram(program: CompiledProgram) {
@@ -337,7 +347,10 @@ export class Engine<T> {
             this.attachProgram(shader);
         }
         // Create the light programs
-        this.lightShader = this.compileProgram(LightShader);
+        const lightProgram = this.compileProgram(LightShader);
+        if (lightProgram) {
+            this.lightShader = lightProgram;
+        }
     }
 
     async _loadTextures() {
@@ -710,7 +723,7 @@ export class Engine<T> {
                     }
 
                     gl.uniform1i(uSpotlight, isSpotlight ? 1 : 0);
-                    gl.uniform1f(uShininess, lightSource.shininess ?? 150);
+                    gl.uniform1f(uShininess, spotlight.shininess ?? 150);
                     gl.uniform1f(uLowerLimit, Math.cos(spotlight.lowerLimit));
                     gl.uniform1f(uUpperLimit, Math.cos(spotlight.upperLimit));
                     gl.uniform3fv(

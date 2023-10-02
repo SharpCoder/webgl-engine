@@ -76,7 +76,10 @@ export class Camera {
                 m4.rotateZ(this.rotation[2]),
                 m4.rotateY(this.rotation[1]),
                 m4.rotateX(this.rotation[0]),
-                m4.translate.apply(this, this.offset),
+                m4.translate.apply(
+                    this,
+                    this.offset as [number, number, number]
+                ),
             ])
         );
 

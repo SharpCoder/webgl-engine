@@ -69,8 +69,9 @@ const fragmentShader = `
     }
 `;
 
-const gl = document.createElement('canvas').getContext('webgl');
-
+const gl = document
+    .createElement('canvas')
+    .getContext('webgl') as WebGLRenderingContext;
 export const LightShader: ProgramTemplate = {
     name: 'Omnilight',
     order: 2,

@@ -1,8 +1,8 @@
-export function rads(degs) {
+export function rads(degs: number) {
     return (degs / 180.0) * Math.PI;
 }
 
-export function degs(rads) {
+export function degs(rads: number) {
     return (rads * 180) / Math.PI;
 }
 

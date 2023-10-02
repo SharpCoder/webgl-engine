@@ -28,7 +28,10 @@ const defaultSkyboxFragmentShader = `
     }
 `;
 
-const gl = document.createElement('canvas').getContext('webgl');
+const gl = document
+    .createElement('canvas')
+    .getContext('webgl') as WebGLRenderingContext;
+
 export const SkyboxShader: ProgramTemplate = {
     name: 'skybox',
     order: 999,
@@ -36,7 +39,6 @@ export const SkyboxShader: ProgramTemplate = {
         mode: gl?.TRIANGLES,
         count: 6,
         depthFunc: gl?.LEQUAL,
-        blend: false,
     },
     vertexShader: defaultSkyboxVertexShader,
     fragmentShader: defaultSkyboxFragmentShader,
@@ -92,8 +94,9 @@ export const SkyboxShader: ProgramTemplate = {
             const format = gl.RGBA;
             const type = gl.UNSIGNED_BYTE;
 
-            const loaderMap = {};
+            const loaderMap: Record<string, boolean> = {};
             const promises = [];
+
             for (const { uri, target } of targets) {
                 if (!loaderMap[uri]) {
                     loaderMap[uri] = true;

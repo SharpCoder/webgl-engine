@@ -23,6 +23,7 @@ export class Scene<T> {
     shaders: ProgramTemplate[];
     objects: Obj3d[];
     camera: Camera;
+    // @ts-ignore
     engine: Engine<T>;
     once?: (engine: Engine<T>) => void;
     init?: (engine: Engine<T>) => void;
@@ -74,7 +75,6 @@ export class Scene<T> {
         this.vertexes = [];
         this.texcoords = [];
         this.normals = [];
-        this.spotlights = [];
         this.lights = [];
         this.vertexMetadata = {};
         this.texcoordMetadata = {};
