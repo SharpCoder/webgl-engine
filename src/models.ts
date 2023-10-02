@@ -13,6 +13,7 @@ export type ProgramTemplate = {
         components: number;
         depthFunc: number;
         mode: number;
+        blend: boolean;
     };
     init?: (self: ProgramTemplate, engine: Engine<unknown>) => void;
     beforeDraw?: (engine: Engine<unknown>) => void;
@@ -52,6 +53,30 @@ export type ProgramTemplate = {
 export type CompiledProgram = ProgramTemplate & {
     compiledProgram: WebGLProgram;
 };
+
+type BaseLight = {
+    /** The position of the light source */
+    position: number[];
+    /** The color of the light source */
+    color: number[];
+    /** If true, the light will be turned off */
+    disabled?: boolean;
+    /** Method to invoke when the update frame is called */
+    update?: (time_t: number, engine: Engine<unknown>) => void;
+};
+
+export type Light = {} & BaseLight;
+
+export type Spotlight = {
+    /** Which direction the light will be facing */
+    rotation: number[];
+    /** The lower limit (in radians) for which to disperse the light */
+    lowerLimit: number;
+    /** The upper limit (in radians) for which to disperse the light */
+    upperLimit: number;
+    /** How shiny the light is */
+    shininess?: number;
+} & BaseLight;
 
 export type Obj3d = {
     name: string;

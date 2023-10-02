@@ -3,10 +3,12 @@ import type { Engine } from './engine';
 import {
     Flatten,
     Flatten2D,
-    Obj3d,
-    ProgramTemplate,
+    type Light,
+    type Obj3d,
+    type ProgramTemplate,
     Repeat,
     Repeat2D,
+    type Spotlight,
 } from './models';
 
 function del(obj: Record<any, any>) {
@@ -27,6 +29,8 @@ export class Scene<T> {
     update: (time_t: number, engine: Engine<T>) => void;
     onClick?: (engine: Engine<T>) => void;
     onMouseUp?: (engine: Engine<T>) => void;
+
+    lights: (Light | Spotlight)[];
 
     colors: number[];
     colorMetadata: Record<string, { offset: number; length: number }>;
@@ -65,11 +69,13 @@ export class Scene<T> {
         this.shaders = shaders;
         this.init = init;
         this.once = once;
-        this.status = status;
+        this.status = status ?? 'ready';
         this.colors = [];
         this.vertexes = [];
         this.texcoords = [];
         this.normals = [];
+        this.spotlights = [];
+        this.lights = [];
         this.vertexMetadata = {};
         this.texcoordMetadata = {};
         this.colorMetadata = {};
@@ -138,6 +144,10 @@ export class Scene<T> {
         }
     }
 
+    addLight(source: Light | Spotlight) {
+        this.lights.push(source);
+    }
+
     getOffsetAndLength(type: 'texcoord' | 'vertex' | 'normals', name: string) {
         switch (type) {
             case 'texcoord': {
@@ -202,17 +212,19 @@ export class Scene<T> {
         // Collect all root and child nodes.
         while (queue.length > 0) {
             const obj = queue.pop();
-            const index = this.objects.indexOf(obj);
-            if (obj && index >= 0) {
-                this.objects.splice(index, 1);
-                if (obj.children) {
-                    for (const child of obj.children) {
-                        child._parent = obj;
-                        queue.push(child);
+            if (obj) {
+                const index = this.objects.indexOf(obj);
+                if (obj && index >= 0) {
+                    this.objects.splice(index, 1);
+                    if (obj.children) {
+                        for (const child of obj.children) {
+                            child._parent = obj;
+                            queue.push(child);
+                        }
                     }
+                } else {
+                    break;
                 }
-            } else {
-                break;
             }
         }
     }

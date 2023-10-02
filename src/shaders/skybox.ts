@@ -36,6 +36,7 @@ export const SkyboxShader: ProgramTemplate = {
         mode: gl?.TRIANGLES,
         count: 6,
         depthFunc: gl?.LEQUAL,
+        blend: false,
     },
     vertexShader: defaultSkyboxVertexShader,
     fragmentShader: defaultSkyboxFragmentShader,

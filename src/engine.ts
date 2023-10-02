@@ -7,9 +7,10 @@ import type {
     CompiledProgram,
     Obj3d,
     ProgramTemplate,
-    repeat_mode,
+    Spotlight,
 } from './models';
 import type { Scene } from './scene';
+import { LightShader } from './shaders/light';
 import { rads } from './utils';
 
 export type ReadyState = 'initialize' | 'loading' | 'ready' | 'destroyed';
@@ -45,6 +46,9 @@ export class Engine<T> {
     /** Values that are computed by the engine. */
     computed: EngineComputedValues;
     private programs: Record<string, CompiledProgram>;
+
+    // Lighting-specific shaders
+    private lightShader: CompiledProgram;
 
     // Input processes
     keymap: Record<string, boolean>;
@@ -113,7 +117,7 @@ export class Engine<T> {
         this.setCanvas(canvas);
     }
 
-    attachProgram(template: ProgramTemplate) {
+    private compileProgram(template: ProgramTemplate): CompiledProgram {
         const { gl } = this;
 
         template.properties = template.properties ?? {};
@@ -130,7 +134,11 @@ export class Engine<T> {
             ),
         };
 
-        this.programs[template.name] = result;
+        return result;
+    }
+
+    attachProgram(template: ProgramTemplate) {
+        this.programs[template.name] = this.compileProgram(template);
     }
 
     useProgram(program: CompiledProgram) {
@@ -144,6 +152,10 @@ export class Engine<T> {
                 program.compiledProgram,
                 attribute
             );
+
+            if (loc == -1) {
+                continue;
+            }
 
             if (data.buffer) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, data.buffer);
@@ -165,10 +177,6 @@ export class Engine<T> {
         }
     }
 
-    getProgram(name: string): CompiledProgram {
-        return this.programs[name];
-    }
-
     setCanvas(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.gl = canvas.getContext('webgl') as WebGL2RenderingContext;
@@ -182,8 +190,6 @@ export class Engine<T> {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.enable(gl.CULL_FACE);
         gl.enable(gl.DEPTH_TEST);
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         // This disables some warning because it's the fallback
         // vertex context or something.
@@ -330,6 +336,8 @@ export class Engine<T> {
         for (const shader of shaders) {
             this.attachProgram(shader);
         }
+        // Create the light programs
+        this.lightShader = this.compileProgram(LightShader);
     }
 
     async _loadTextures() {
@@ -456,6 +464,38 @@ export class Engine<T> {
         console.timeEnd('reconfigure buffers');
     }
 
+    private loadStaticUniforms(program: CompiledProgram) {
+        const { gl } = this;
+
+        for (const uniform in program.staticUniforms ?? {}) {
+            const loc = gl.getUniformLocation(program.compiledProgram, uniform);
+            if (
+                program &&
+                program.staticUniforms &&
+                program.staticUniforms[uniform] &&
+                loc
+            ) {
+                program.staticUniforms[uniform](this, loc);
+            }
+        }
+    }
+
+    private loadDynamicUniforms(program: CompiledProgram, obj: Obj3d) {
+        const { gl } = this;
+        for (const uniform in program.dynamicUniforms ?? {}) {
+            const loc = gl.getUniformLocation(program.compiledProgram, uniform);
+
+            if (
+                program &&
+                program.dynamicUniforms &&
+                program.dynamicUniforms[uniform] &&
+                loc
+            ) {
+                program.dynamicUniforms[uniform](this, loc, obj);
+            }
+        }
+    }
+
     async draw() {
         const { gl, activeScene } = this;
         if (!gl) return;
@@ -545,20 +585,12 @@ export class Engine<T> {
 
         for (const program of programs) {
             this.useProgram(program);
+            this.loadStaticUniforms(program);
 
-            for (const uniform in program.staticUniforms ?? {}) {
-                const loc = gl.getUniformLocation(
-                    program.compiledProgram,
-                    uniform
-                );
-                if (
-                    program &&
-                    program.staticUniforms &&
-                    program.staticUniforms[uniform] &&
-                    loc
-                ) {
-                    program.staticUniforms[uniform](this, loc);
-                }
+            if (program.objectDrawArgs?.blend) {
+                gl.enable(gl.BLEND);
+            } else {
+                gl.disable(gl.BLEND);
             }
 
             gl.depthFunc(program.objectDrawArgs?.depthFunc ?? gl.LESS);
@@ -576,22 +608,7 @@ export class Engine<T> {
                     await this._loadTextures();
                 }
 
-                for (const uniform in program.dynamicUniforms ?? {}) {
-                    const loc = gl.getUniformLocation(
-                        program.compiledProgram,
-                        uniform
-                    );
-
-                    if (
-                        program &&
-                        program.dynamicUniforms &&
-                        program.dynamicUniforms[uniform] &&
-                        loc
-                    ) {
-                        program.dynamicUniforms[uniform](this, loc, obj);
-                    }
-                }
-
+                this.loadDynamicUniforms(program, obj);
                 const components = program.objectDrawArgs?.components ?? 3;
                 const [offset, length] = activeScene.getOffsetAndLength(
                     'vertex',
@@ -619,12 +636,114 @@ export class Engine<T> {
             program.afterDraw && program.afterDraw.call(this, this);
         }
 
+        // Render the light
+        if (this.lightShader) {
+            gl.enable(gl.BLEND);
+            const program = this.lightShader;
+            this.useProgram(program);
+            for (const lightSource of activeScene.lights) {
+                if (lightSource.disabled === true) continue;
+
+                this.loadStaticUniforms(program);
+                gl.depthFunc(gl.ALWAYS);
+
+                for (const obj of drawables) {
+                    if (shouldSkip(this.settings.zFar, camera, obj)) continue;
+                    this.loadDynamicUniforms(program, obj);
+
+                    // Add the additional uniforms
+                    const uLightColor = gl.getUniformLocation(
+                        program.compiledProgram,
+                        'u_lightColor'
+                    );
+                    const uLightPosition = gl.getUniformLocation(
+                        program.compiledProgram,
+                        'u_lightPosition'
+                    );
+                    const uSpotlight = gl.getUniformLocation(
+                        program.compiledProgram,
+                        'u_spotlight'
+                    );
+                    const uLowerLimit = gl.getUniformLocation(
+                        program.compiledProgram,
+                        'u_lowerLimit'
+                    );
+                    const uUpperLimit = gl.getUniformLocation(
+                        program.compiledProgram,
+                        'u_upperLimit'
+                    );
+                    const uShininess = gl.getUniformLocation(
+                        program.compiledProgram,
+                        'u_shininess'
+                    );
+                    const uLightRotation = gl.getUniformLocation(
+                        program.compiledProgram,
+                        'u_lightRotation'
+                    );
+
+                    const spotlight = lightSource as Spotlight;
+
+                    const isSpotlight =
+                        spotlight.rotation !== undefined &&
+                        spotlight.lowerLimit !== undefined &&
+                        spotlight.upperLimit !== undefined;
+
+                    gl.blendFuncSeparate(
+                        gl.SRC_ALPHA,
+                        gl.ONE_MINUS_SRC_ALPHA,
+                        gl.ZERO,
+                        gl.ONE
+                    );
+
+                    if (isSpotlight) {
+                        const lmat = m4.combine([
+                            m4.rotateX(spotlight.rotation[0]),
+                            m4.rotateY(spotlight.rotation[1]),
+                            m4.rotateZ(spotlight.rotation[2]),
+                        ]);
+
+                        gl.uniform3fv(uLightRotation, [
+                            -lmat[8],
+                            -lmat[9],
+                            -lmat[10],
+                        ]);
+                    }
+
+                    gl.uniform1i(uSpotlight, isSpotlight ? 1 : 0);
+                    gl.uniform1f(uShininess, lightSource.shininess ?? 150);
+                    gl.uniform1f(uLowerLimit, Math.cos(spotlight.lowerLimit));
+                    gl.uniform1f(uUpperLimit, Math.cos(spotlight.upperLimit));
+                    gl.uniform3fv(
+                        uLightColor,
+                        lightSource.color.map((v) => v / 256)
+                    );
+                    gl.uniform3fv(uLightPosition, [
+                        lightSource.position[0],
+                        -lightSource.position[1],
+                        -lightSource.position[2],
+                    ]);
+
+                    const components = program.objectDrawArgs?.components ?? 3;
+                    const [offset, length] = activeScene.getOffsetAndLength(
+                        'vertex',
+                        obj.name
+                    );
+
+                    if (obj.visible !== false) {
+                        gl.drawArrays(
+                            gl.TRIANGLES,
+                            offset / components,
+                            length / components
+                        );
+                    }
+                }
+            }
+        }
+
         return;
     }
 
     update() {
-        if (this.readyState !== 'ready') return;
-
         const { activeScene } = this;
         const now = new Date().getTime();
         const time_t = now - this.lastTime;
@@ -636,6 +755,9 @@ export class Engine<T> {
         activeScene.update(time_t, this);
         for (const obj of activeScene.objects) {
             obj.update && obj.update(time_t, this);
+        }
+        for (const light of activeScene.lights) {
+            light.update && light.update.call(light, time_t, this);
         }
     }
 }

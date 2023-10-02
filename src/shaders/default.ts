@@ -1,9 +1,10 @@
 import type { ProgramTemplate, repeat_mode } from '../models';
 import { Flatten2D, Repeat2D } from '../models';
 
-const default3DVertexShader = `
+const vertexShader = `
     attribute vec4 a_position;
     attribute vec4 a_color;
+
     attribute vec2 a_texcoord;
 
     uniform mat4 u_worldView;
@@ -27,7 +28,7 @@ const default3DVertexShader = `
     }
 `;
 
-const default3DFragmentShader = `
+const fragmentShader = `
     precision mediump float;
     
     varying vec4 v_color;
@@ -66,9 +67,10 @@ export const DefaultShader: ProgramTemplate = {
         components: 3,
         depthFunc: gl?.LESS,
         mode: gl?.TRIANGLES,
+        blend: false,
     },
-    vertexShader: default3DVertexShader,
-    fragmentShader: default3DFragmentShader,
+    vertexShader: vertexShader,
+    fragmentShader: fragmentShader,
     attributes: {
         a_color: {
             components: 3,

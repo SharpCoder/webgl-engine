@@ -42,6 +42,7 @@ export const FogShader: ProgramTemplate = {
         components: 3,
         depthFunc: gl?.LEQUAL,
         mode: gl?.TRIANGLES,
+        blend: false,
     },
     vertexShader: fogVertexShader,
     fragmentShader: fogFragmentShader,
