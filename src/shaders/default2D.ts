@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { m3, type ProgramTemplate } from 'webgl-engine';
+import { m3, type ProgramTemplate } from '../';
 
 const default2DVertexShader = `
     attribute vec2 a_position;
