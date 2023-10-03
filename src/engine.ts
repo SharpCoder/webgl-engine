@@ -21,6 +21,21 @@ export type EngineComputedValues = {
     projectionMatrix: number[];
 } & Record<string, any>;
 
+const warnings: Record<string, number> = {};
+
+function logWarning(message: string) {
+    warnings[message] = warnings[message] ?? 0;
+    warnings[message] += 1;
+
+    if (warnings[message] === 4) {
+        console.warn(`NO LONGER REPORTING '${message}' because of frequency`);
+        return;
+    } else if (warnings[message] > 4) {
+        return;
+    }
+    console.warn(message);
+}
+
 export class Engine<T> {
     // @ts-ignore
     canvas: HTMLCanvasElement;
@@ -164,6 +179,7 @@ export class Engine<T> {
             );
 
             if (loc == -1) {
+                logWarning(`Could not find attribute ${attribute}`);
                 continue;
             }
 
@@ -482,6 +498,11 @@ export class Engine<T> {
 
         for (const uniform in program.staticUniforms ?? {}) {
             const loc = gl.getUniformLocation(program.compiledProgram, uniform);
+
+            if (!loc) {
+                logWarning(`Could not find uniform ${uniform}`);
+            }
+
             if (
                 program &&
                 program.staticUniforms &&
@@ -497,6 +518,10 @@ export class Engine<T> {
         const { gl } = this;
         for (const uniform in program.dynamicUniforms ?? {}) {
             const loc = gl.getUniformLocation(program.compiledProgram, uniform);
+
+            if (!loc) {
+                logWarning(`Could not find uniform ${uniform}`);
+            }
 
             if (
                 program &&
@@ -649,8 +674,8 @@ export class Engine<T> {
             program.afterDraw && program.afterDraw.call(this, this);
         }
 
-        // Render the light
-        if (this.lightShader) {
+        // Render the light if it's a 3D scene
+        if (this.lightShader && activeScene.components === 3) {
             gl.enable(gl.BLEND);
             const program = this.lightShader;
             this.useProgram(program);
@@ -663,6 +688,11 @@ export class Engine<T> {
                 for (const obj of drawables) {
                     if (shouldSkip(this.settings.zFar, camera, obj)) continue;
                     this.loadDynamicUniforms(program, obj);
+                    if (obj.normals === undefined) {
+                        logWarning(
+                            `Not computing light for ${obj.name} because it is missing normals`
+                        );
+                    }
 
                     // Add the additional uniforms
                     const uLightColor = gl.getUniformLocation(

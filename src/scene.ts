@@ -30,7 +30,7 @@ export class Scene<T> {
     update: (time_t: number, engine: Engine<T>) => void;
     onClick?: (engine: Engine<T>) => void;
     onMouseUp?: (engine: Engine<T>) => void;
-
+    components: number;
     lights: (Light | Spotlight)[];
 
     colors: number[];
@@ -50,6 +50,7 @@ export class Scene<T> {
         status,
         once,
         onClick,
+        components,
         onMouseUp,
     }: {
         title: string;
@@ -60,6 +61,7 @@ export class Scene<T> {
         onMouseUp?: (engine: Engine<T>) => void;
         status?: SceneStatus;
         shaders: ProgramTemplate[];
+        components?: number;
     }) {
         this.title = title;
         this.visible = true;
@@ -80,6 +82,7 @@ export class Scene<T> {
         this.texcoordMetadata = {};
         this.colorMetadata = {};
         this.normalMetadata = {};
+        this.components = components ?? 3;
         this.camera = new Camera({});
     }
 
@@ -98,12 +101,14 @@ export class Scene<T> {
         if (!this.vertexMetadata[name]) {
             const vertexes = obj.vertexes;
             const normals =
-                obj.normals ?? Flatten(Repeat([0, 0, 0], vertexes.length / 3));
+                obj.normals ??
+                Flatten(Repeat([0, 0, 0], vertexes.length / this.components));
             const colors =
-                obj.colors ?? Flatten(Repeat([0, 0, 0], vertexes.length / 3));
+                obj.colors ??
+                Flatten(Repeat([0, 0, 0], vertexes.length / this.components));
             const texcoords =
                 obj.texcoords ??
-                Flatten2D(Repeat2D([0, 0], vertexes.length / 3));
+                Flatten2D(Repeat2D([0, 0], vertexes.length / this.components));
 
             // Register it
             this.vertexMetadata[name] = {
