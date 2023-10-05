@@ -287,7 +287,7 @@ export class Engine<T> {
             }
         }
 
-        this.keymap[evt.key] = true;
+        this.keymap[evt.key.toLowerCase()] = true;
     }
 
     _handleKeyup(evt: KeyboardEvent) {
@@ -299,7 +299,7 @@ export class Engine<T> {
             this.keymap['alt'] = false;
         }
 
-        this.keymap[evt.key] = false;
+        this.keymap[evt.key.toLowerCase()] = false;
     }
 
     _handleMouseMove(evt: MouseEvent) {
