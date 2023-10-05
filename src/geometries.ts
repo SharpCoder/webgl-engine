@@ -138,7 +138,7 @@ export function cuboidNormals() {
     ];
 }
 
-export function cylinder(sides, length, dia) {
+export function cylinder(sides: number, length: number, dia: number) {
     const result = [];
     const vertices = [];
     const inc = (Math.PI * 2.0) / sides;

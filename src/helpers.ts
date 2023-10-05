@@ -71,3 +71,12 @@ export function isWebGLSupported() {
         return false;
     }
 }
+
+export function isAChildOf(parent: HTMLElement, target: HTMLElement) {
+    if (parent === target) return true;
+    if (target.parentElement) {
+        return isAChildOf(parent, target.parentElement);
+    }
+
+    return false;
+}

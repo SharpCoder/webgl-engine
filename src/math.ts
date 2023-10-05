@@ -1,6 +1,10 @@
 import type { Vec3D } from './models';
 
 export class m3 {
+    static identity(): number[] {
+        return [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    }
+
     static translate(x: number, y: number) {
         return [1, 0, 0, 0, 1, 0, x, y, 1];
     }
@@ -255,7 +259,7 @@ export class m4 {
     }
 
     static mult(v: number[], m: number[]) {
-        const dst = [];
+        const dst: number[] = [];
         for (let i = 0; i < 4; ++i) {
             dst[i] = 0.0;
             for (let j = 0; j < 4; ++j) {

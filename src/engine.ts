@@ -1,5 +1,5 @@
 import { Camera } from './camera';
-import { createProgram, createShader } from './helpers';
+import { createProgram, isAChildOf } from './helpers';
 import { Loader } from './loader';
 import { isPowerOf2, m4 } from './math';
 import type {
@@ -73,6 +73,8 @@ export class Engine<T> {
     mousebutton: number;
     mousex: number;
     mousey: number;
+    mouseOffsetX: number;
+    mouseOffsetY: number;
     mouseClickDuration: number;
     private mouseClickStart: number;
 
@@ -108,6 +110,8 @@ export class Engine<T> {
         this.mouseClickDuration = 0;
         this.mousex = window.innerWidth / 2;
         this.mousey = window.innerHeight / 2;
+        this.mouseOffsetX = window.innerWidth / 2;
+        this.mouseOffsetY = window.innerHeight / 2;
         this.properties = {};
         this._debugLogs = '';
         this.loader = new Loader();
@@ -301,6 +305,28 @@ export class Engine<T> {
     _handleMouseMove(evt: MouseEvent) {
         this.mousex = evt.clientX;
         this.mousey = evt.clientY;
+
+        // Calculate if it's in the viewport and if so, the coordiantes are fine
+        if (
+            this.gl &&
+            this.gl.canvas &&
+            evt.target &&
+            isAChildOf(
+                this.gl.canvas as HTMLCanvasElement,
+                evt.target as HTMLElement
+            )
+        ) {
+            this.mouseOffsetX = evt.offsetX;
+            this.mouseOffsetY = evt.offsetY;
+        } else if (this.gl && this.gl.canvas && this.gl.canvas) {
+            // If the mouse is outside the canvas, but still on the page, we can extrapolate
+            // the "in-canvas" position by adjusting it for the HTML screen space.
+            const canvas = this.gl.canvas as HTMLCanvasElement;
+            const bounds = canvas.getBoundingClientRect();
+            this.mouseOffsetX = evt.clientX - bounds.x;
+            this.mouseOffsetY = evt.clientY - bounds.y;
+        }
+
         this.mousebutton = evt.buttons;
     }
 
@@ -795,7 +821,7 @@ export class Engine<T> {
             return;
         }
 
-        activeScene.update(time_t, this);
+        activeScene.update.call(activeScene, time_t, this);
         for (const obj of activeScene.objects) {
             obj.update && obj.update(time_t, this);
         }
