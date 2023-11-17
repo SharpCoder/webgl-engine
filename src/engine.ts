@@ -343,6 +343,8 @@ export class Engine<T> {
 
         this.mouseClickStart = new Date().getTime();
         this.mouseClickDuration = 0;
+
+        this.mousebutton = evt.buttons;
     }
 
     _handleMouseUp(evt: MouseEvent) {
@@ -352,6 +354,8 @@ export class Engine<T> {
         if (activeScene && activeScene.onMouseUp) {
             activeScene.onMouseUp(this);
         }
+
+        this.mousebutton = evt.buttons;
     }
 
     debug(str: string) {
@@ -619,7 +623,9 @@ export class Engine<T> {
             this.computed.cameraMatrix
         );
         // Collect all the objects
-        const drawables = activeScene.objects;
+        const drawables = activeScene.objects.sort(
+            (a, b) => (b.zIndex ?? 0) - (a.zIndex ?? 0)
+        );
 
         for (const obj of drawables) {
             if (shouldSkip(this.settings.zFar, camera, obj)) continue;

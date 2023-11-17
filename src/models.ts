@@ -98,6 +98,7 @@ export type Obj3d = {
     scale?: [number, number, number];
     properties?: Record<any, any>;
     additionalMatrix?: number[];
+    zIndex?: number;
     _bbox?: bbox;
     _computed?: {
         positionMatrix: number[];

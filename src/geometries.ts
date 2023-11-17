@@ -12,7 +12,15 @@ export function rect2D(w: number, h: number) {
 }
 
 export function tex2D(w: number, h: number) {
-    return [0, 0, w, 0, w, h, 0, 0, w, h, 0, h];
+    // prettier-ignore
+    return [
+        0, 0, 
+        w, 0, 
+        w, h, 
+        0, 0, 
+        w, h, 
+        0, h
+    ];
 }
 
 export function cuboid(w: number, d: number, h: number) {

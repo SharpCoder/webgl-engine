@@ -1,13 +1,12 @@
+import { tex2D } from '.';
 import { Camera } from './camera';
 import type { Engine } from './engine';
 import {
     Flatten,
-    Flatten2D,
     type Light,
     type Obj3d,
     type ProgramTemplate,
     Repeat,
-    Repeat2D,
     type Spotlight,
 } from './models';
 
@@ -23,6 +22,7 @@ export class Scene<T> {
     shaders: ProgramTemplate[];
     objects: Obj3d[];
     camera: Camera;
+    properties: Record<string, any>;
     // @ts-ignore
     engine: Engine<T>;
     once?: (engine: Engine<T>) => void;
@@ -52,6 +52,7 @@ export class Scene<T> {
         onClick,
         components,
         onMouseUp,
+        properties,
     }: {
         title: string;
         once?: (engine: Engine<T>) => void;
@@ -62,6 +63,7 @@ export class Scene<T> {
         status?: SceneStatus;
         shaders: ProgramTemplate[];
         components?: number;
+        properties?: Record<string, any>;
     }) {
         this.title = title;
         this.visible = true;
@@ -82,6 +84,7 @@ export class Scene<T> {
         this.texcoordMetadata = {};
         this.colorMetadata = {};
         this.normalMetadata = {};
+        this.properties = properties ?? {};
         this.components = components ?? 3;
         this.camera = new Camera({});
     }
@@ -98,17 +101,19 @@ export class Scene<T> {
 
     private registerObject(obj: Obj3d) {
         let name = obj.name;
+
         if (!this.vertexMetadata[name]) {
             const vertexes = obj.vertexes;
+
             const normals =
                 obj.normals ??
                 Flatten(Repeat([0, 0, 0], vertexes.length / this.components));
+
             const colors =
                 obj.colors ??
                 Flatten(Repeat([0, 0, 0], vertexes.length / this.components));
-            const texcoords =
-                obj.texcoords ??
-                Flatten2D(Repeat2D([0, 0], vertexes.length / this.components));
+
+            const texcoords = [...(obj.texcoords ?? tex2D(0, 0))];
 
             // Register it
             this.vertexMetadata[name] = {
@@ -153,12 +158,22 @@ export class Scene<T> {
         this.lights.push(source);
     }
 
-    getOffsetAndLength(type: 'texcoord' | 'vertex' | 'normals', name: string) {
+    getOffsetAndLength(
+        type: 'texcoord' | 'vertex' | 'normals' | 'color',
+        name: string
+    ) {
         switch (type) {
             case 'texcoord': {
                 return [
                     this.texcoordMetadata[name].offset,
                     this.texcoordMetadata[name].length,
+                ];
+            }
+
+            case 'color': {
+                return [
+                    this.colorMetadata[name].offset,
+                    this.colorMetadata[name].length,
                 ];
             }
 
@@ -189,6 +204,69 @@ export class Scene<T> {
         del(this.texcoordMetadata);
         del(this.colorMetadata);
         del(this.normalMetadata);
+    }
+
+    updateObject(obj: Obj3d) {
+        const name = obj.name;
+
+        // If it doesn't exist, add it
+        if (this.vertexMetadata[name] === undefined) {
+            this.addObject(obj);
+            return;
+        }
+
+        const [normalOffset, normalLength] = this.getOffsetAndLength(
+            'normals',
+            name
+        );
+
+        if (obj.normals && obj.normals.length === normalLength) {
+            this.normals.splice(normalOffset, normalLength, ...obj.normals);
+        } else if (obj.normals) {
+            console.error(
+                `Could not update normals for ${name} because the array size changed!`
+            );
+        }
+
+        const [vertexOffset, vertexLength] = this.getOffsetAndLength(
+            'vertex',
+            name
+        );
+        if (obj.vertexes.length === vertexLength) {
+            this.vertexes.splice(vertexOffset, vertexLength, ...obj.vertexes);
+        } else {
+            console.error(
+                `Could not update vertexes for ${name} because the array size changed!`
+            );
+        }
+
+        const [texcoordOffset, texcoordLength] = this.getOffsetAndLength(
+            'texcoord',
+            name
+        );
+        if (obj.texcoords && obj.texcoords.length === texcoordLength) {
+            this.texcoords.splice(
+                texcoordOffset,
+                texcoordLength,
+                ...obj.texcoords
+            );
+        } else if (obj.texcoords) {
+            console.error(
+                `Could not update texcoords for ${name} because the array size changed!`
+            );
+        }
+
+        const [colorOffset, colorLength] = this.getOffsetAndLength(
+            'color',
+            name
+        );
+        if (obj.colors && obj.colors.length === colorLength) {
+            this.colors.splice(colorOffset, colorLength, ...obj.colors);
+        } else {
+            console.error(
+                `Could not update colors for ${name} because the array size changed!`
+            );
+        }
     }
 
     addObject(obj: Obj3d) {
