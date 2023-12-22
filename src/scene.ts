@@ -8,6 +8,8 @@ import {
     type ProgramTemplate,
     Repeat,
     type Spotlight,
+    Flatten2D,
+    Repeat2D,
 } from './models';
 
 function del(obj: Record<any, any>) {
@@ -113,7 +115,10 @@ export class Scene<T> {
                 obj.colors ??
                 Flatten(Repeat([0, 0, 0], vertexes.length / this.components));
 
-            const texcoords = [...(obj.texcoords ?? tex2D(0, 0))];
+            const texcoords = [
+                ...(
+                    obj.texcoords ?? Flatten2D(Repeat2D([0, 0], vertexes.length / this.components))
+                )];
 
             // Register it
             this.vertexMetadata[name] = {
